@@ -450,7 +450,7 @@ bomb_draw <- ggdraw(bomb_base) + draw_label (xlab, x = 0.56, y = 0.07, size = 14
 #megan code, to save last plot
 #does this work with rmd? let's find out!!
 dev.new (width = 3.5, height = 2.225, unit = "in", noRStudioGD = T); last_plot()
-ggsave ("Bomb_lipid_compound_graph_subset.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
+#ggsave ("Bomb_lipid_compound_graph_subset.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
 ```
 
 
@@ -514,7 +514,7 @@ V_draw <- ggdraw(V_base) + draw_label(xlab, x = 0.56, y = 0.07, size = 14) #bomb
 #use this size dots or larger tho??
 #LOOKS GREAT! LEt's save this with megans save-a-plot code!
 dev.new (width = 3.5, height = 2.225, unit = "in", noRStudioGD = T); last_plot()
-ggsave ("Bomb_lipid_VIOLIN_graph.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
+#ggsave ("Bomb_lipid_VIOLIN_graph.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
 
 #aside:
 ##did I use the correct (non-weird... fish for my egg t-test?? I think most were not weird, we can include WF 25... I think... Coho wild 1 and 2 were weird with only a few eggs) # I think I need to make sure I'm using the not weird ones
@@ -566,34 +566,6 @@ sd(Wild_lipid_energy$X..lipid)
 sd(Hatch_lipid_energy$X..lipid)
 
 
-#re-do the t-tests and SD WITHOUT THE WEIRDOS #oh, this is it for the SUBSET results
-#Bomb_with_covariates_notweird
-Wild_egg_energy_noweird <- Bomb_with_covariates_notweird %>% 
-  filter(Wild_or_hatch == "W") %>%
-  select(BombED.Dry.)
-    
-Hatch_egg_energy_noweird <- Bomb_with_covariates_notweird %>% 
-  filter(Wild_or_hatch == "H") %>%
-  select(BombED.Dry.)
-
-(T_test_ED_noweird <- t.test(Hatch_egg_energy_noweird, Wild_egg_energy_noweird, alternative="less", var.equal = T) )
-
-sd(Hatch_egg_energy_noweird$BombED.Dry.)
-sd(Wild_egg_energy_noweird$BombED.Dry.)
-
-#lipid now
-Wild_lipid_noweird <- Bomb_with_covariates_notweird %>% 
-  filter(Wild_or_hatch == "W") %>%
-  select(X..lipid)
-    
-Hatch_lipid_noweird <- Bomb_with_covariates_notweird %>% 
-  filter(Wild_or_hatch == "H") %>%
-  select(X..lipid)
-
-(T_test_lipid_noweird <- t.test(Hatch_lipid_noweird, Wild_lipid_noweird, alternative="less", var.equal = T) )
-
-sd(Hatch_lipid_noweird$X..lipid)
-sd(Wild_lipid_noweird$X..lipid)
 
 ```
 GSI sig test -> not sig at all...
