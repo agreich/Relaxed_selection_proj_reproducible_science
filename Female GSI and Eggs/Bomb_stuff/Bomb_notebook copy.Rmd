@@ -3,7 +3,7 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-let's load in and explore the data. What is our main data again?
+Load in and explore the data.
 ```{r}
 Bomb_df <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Hatchery egg condition data 1-11-22_modified copy.csv")
 
@@ -83,7 +83,7 @@ mod_L <- aov(X..lipid ~ Wild_or_hatch, data=Bomb_df)
 fitted(mod_E)
 #plot residuals vs. fitted?
 r_E <- resid(mod_E)
-ggplot(Bomb_df) + aes(x=r_E, y=mod_E, color=Wild_or_hatch) + geom_point()
+#ggplot(Bomb_df) + aes(x=r_E, y=mod_E, color=Wild_or_hatch) + geom_point()
 plot(resid(mod_E))
 ggplot(Bomb_df) + aes(x=r_E) + geom_histogram()
 qqnorm(r_E) #concave-down
@@ -146,18 +146,18 @@ What is the indiviudal data called?
 Go back into "Cleaned up Analysis and Graphs.rnb and create a clean csv file with the GSI, and save that locally.
 ```{r}
 #GSI
-GSI_c <- read.csv("Data/c_GSI_for_boms.csv")
+GSI_c <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/c_GSI_for_boms copy.csv")
 
 #GSI clean
-GSI_c_clean <- read.csv("Data/c_GSI_clean_for_bomb.csv")
+GSI_c_clean <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/BOMB_TIME/Data/c_GSI_clean_for_bomb.csv")
 
 #eggs
-Eggs_c <- read.csv("Data/c_all_eggs_bomb.csv")
-C_other_data <- read.csv("Data/c_all_other_stuff.csv")
+Eggs_c <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/c_all_eggs_bomb copy.csv")
+C_other_data <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/c_all_other_stuff copy.csv")
   
   
 #eggs clean
-Eggs_c_clean <- read.csv("Data/c_clean_bomb.csv")
+Eggs_c_clean <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/c_GSI_clean_for_bomb copy.csv")
 
 #another idea: add energy content as covariate in egg size analysis?? Uhhh...later. It's bomb time
 ```
@@ -335,9 +335,9 @@ Bomb3 <- Bomb2 + labs(x=element_blank())
 Lipid3 <- Lipid2 +labs(x=element_blank())
 
 #p4 <- ggplot(data.frame(l = Bomb2$labels$x, x = 0.3, y = 0.3)) +
-      geom_text(aes(x, y, label = l)) + 
-      theme_void() +
-      coord_cartesian(clip = "off")
+      #geom_text(aes(x, y, label = l)) + 
+      #theme_void() +
+      #coord_cartesian(clip = "off")
 
 
 #(Bomb2+ Lipid2)/p4
@@ -434,7 +434,7 @@ V_draw <- ggdraw(V_base) + draw_label(xlab, x = 0.56, y = 0.07, size = 14) #bomb
 #use this size dots or larger tho??
 #LOOKS GREAT! LEt's save this with megans save-a-plot code!
 dev.new (width = 3.5, height = 2.225, unit = "in", noRStudioGD = T); last_plot()
-ggsave ("Bomb_lipid_VIOLIN_graph.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
+#ggsave ("Bomb_lipid_VIOLIN_graph.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
 
 #aside:
 ##did I use the correct (non-weird... fish for my egg t-test?? I think most were not weird, we can include WF 25... I think... Coho wild 1 and 2 were weird with only a few eggs) # I think I need to make sure I'm using the not weird ones
