@@ -5,7 +5,7 @@ output: html_notebook
 
 let's load in and explore the data. What is our main data again?
 ```{r}
-Bomb_df <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/BOMB_TIME/Data/Hatchery egg condition data 1-11-22_modified.csv")
+Bomb_df <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Hatchery egg condition data 1-11-22_modified copy.csv")
 
 names(Bomb_df)
 library(tidyverse)
@@ -86,7 +86,7 @@ mod_L <- aov(X..lipid ~ Wild_or_hatch, data=Bomb_df)
 fitted(mod_E)
 #plot residuals vs. fitted?
 r_E <- resid(mod_E)
-ggplot(Bomb_df) + aes(x=r_E, y=mod_E, color=Wild_or_hatch) + geom_point()
+#ggplot(Bomb_df) + aes(x=r_E, y=mod_E, color=Wild_or_hatch) + geom_point()
 plot(resid(mod_E))
 ggplot(Bomb_df) + aes(x=r_E) + geom_histogram()
 qqnorm(r_E) #concave-down
@@ -149,18 +149,18 @@ What is the indiviudal data called?
 Go back into "Cleaned up Analysis and Graphs.rnb and create a clean csv file with the GSI, and save that locally.
 ```{r}
 #GSI
-GSI_c <- read.csv("Data/c_GSI_for_boms.csv")
+GSI_c <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/c_GSI_for_boms copy.csv")
 
 #GSI clean
-GSI_c_clean <- read.csv("Data/c_GSI_clean_for_bomb.csv")
+GSI_c_clean <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/BOMB_TIME/Data/c_GSI_clean_for_bomb.csv")
 
 #eggs
-Eggs_c <- read.csv("Data/c_all_eggs_bomb.csv")
-C_other_data <- read.csv("Data/c_all_other_stuff.csv")
+Eggs_c <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/c_all_eggs_bomb copy.csv")
+C_other_data <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/c_all_other_stuff copy.csv")
   
   
 #eggs clean
-Eggs_c_clean <- read.csv("Data/c_clean_bomb.csv")
+Eggs_c_clean <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/c_GSI_clean_for_bomb copy.csv")
 
 #another idea: add energy content as covariate in egg size analysis?? Uhhh...later. It's bomb time
 ```
