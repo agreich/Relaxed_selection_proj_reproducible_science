@@ -1,0 +1,526 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+let's load in and explore the data. What is our main data again?
+```{r}
+Bomb_df <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Hatchery egg condition data 1-11-22_modified copy.csv")
+
+names(Bomb_df)
+library(tidyverse)
+#View(Bomb_df)
+```
+
+Plot exploratory stuff
+Interests: ED(energy density) and LIPID CONTENT vs... eg size? length? Hatch wild?
+```{r}
+library(ggplot2)
+library(cowplot)
+
+#the energy density
+#class(Bomb_df$Wild_or_hatch)
+ggplot(Bomb_df) + aes(x=Wild_or_hatch, y=BombED.Dry.) + geom_boxplot() +geom_jitter()
+
+#the lipid content
+ggplot(Bomb_df) + aes(x=Wild_or_hatch, y=X..lipid) + geom_boxplot() +geom_jitter()
+
+```
+
+05/02/22 addtiion: t-tests!
+```{r}
+?t.test
+library(dplyr)
+#H0: not different
+#HA: Hatch < Wild
+
+#bomb
+names(Bomb_df)
+Wild_egg_energy <- Bomb_df %>% 
+  filter(Wild_or_hatch == "W") %>%
+  select(BombED.Dry.)
+    
+Hatch_egg_energy <- Bomb_df %>% 
+  filter(Wild_or_hatch == "H") %>%
+  select(BombED.Dry.)
+
+(T_test_ED <- t.test(Hatch_egg_energy, Wild_egg_energy, alternative="less", var.equal = T) )
+##HA: x has a lower mean than y
+##assuming homogeneity (constant variance... Is this true tho?)
+
+t.test(Hatch_egg_energy, Wild_egg_energy, alternative="less", var.equal = F) 
+##HA: x has a lower mean than y
+##assuming homogeneity (Not assuming homogeneity)
+##probs not using this one
+
+
+#lipid
+Wild_lipid_energy <- Bomb_df %>% 
+  filter(Wild_or_hatch == "W") %>%
+  select(X..lipid)
+    
+Hatch_lipid_energy <- Bomb_df %>% 
+  filter(Wild_or_hatch == "H") %>%
+  select(X..lipid)
+
+(T_test_lipid <- t.test(Hatch_lipid_energy, Wild_lipid_energy, alternative="less", var.equal = T))
+
+
+#standard error
+T_test_ED$stderr
+T_test_lipid$stderr
+
+
+#I should probably record these t-test values in the resutls section. My results section is a work in progress...
+```
+
+Normality tests and such? 05/02/22
+```{r}
+names(Bomb_df)
+mod_E <- aov(BombED.Dry. ~ Wild_or_hatch, data=Bomb_df)
+mod_L <- aov(X..lipid ~ Wild_or_hatch, data=Bomb_df)
+
+fitted(mod_E)
+#plot residuals vs. fitted?
+r_E <- resid(mod_E)
+ggplot(Bomb_df) + aes(x=r_E, y=mod_E, color=Wild_or_hatch) + geom_point()
+plot(resid(mod_E))
+ggplot(Bomb_df) + aes(x=r_E) + geom_histogram()
+qqnorm(r_E) #concave-down
+shapiro.test(r_E) #shit, not normal. Normality of residuals violated. Is normality of residuals an assumption?
+
+plot(fitted(mod_E), r_E)
+
+#ugh! 
+
+fit_L <- fitted(mod_L)
+r_L <- resid(mod_L)
+qqnorm(r_L)
+shapiro.test(r_L) #yes normal, lm ok
+
+plot(r_L) #ok weird, might be an outlier in there
+
+library(onewaytests)
+?bf.test  #use this test to test homogeneity resids!!
+
+hist(Bomb_df$BombED.Dry.)
+hist(log(Bomb_df$BombED.Dry.))
+
+```
+
+
+Tangent: 05/02/22
+Normality is violated for energy density. Try a glm?
+Which glm family to choose??
+
+Or... log trasform? try transforming x first
+```{r}
+?glm
+?box
+library(car)
+?boxCox
+boxCox(mod_E)
+#boxCox(mod_E, lambda=seq(-2, 8, 1/5)) #ugh
+mod_E_log <- aov(log(BombED.Dry.) ~ Wild_or_hatch, data=Bomb_df)
+mod_E_sqrt <- aov(sqrt(BombED.Dry.) ~ Wild_or_hatch, data=Bomb_df)
+mod_E_recip <- aov((1/BombED.Dry.) ~ Wild_or_hatch, data=Bomb_df)
+
+plot(resid(mod_E_log))
+qqnorm(resid(mod_E_log))
+qqnorm(r_E)
+qqnorm(resid(mod_E_sqrt)) #none of these look good
+qqnorm(resid(mod_E_recip)) #this one looks bad in the other direction
+
+shapiro.test(resid(mod_E_recip))
+
+```
+
+
+I see more variation in the W for bomb, not so much for lipids. What does this mean?
+I need to add in egg size and fish length (and maybe GSI) and see what this means!
+
+DATA WRANGING
+Goal: attach bomb data to individual.
+What is the indiviudal data called?
+(see main R project folder)
+Go back into "Cleaned up Analysis and Graphs.rnb and create a clean csv file with the GSI, and save that locally.
+```{r}
+#GSI
+GSI_c <- read.csv("Data/c_GSI_for_boms.csv")
+
+#GSI clean
+GSI_c_clean <- read.csv("Data/c_GSI_clean_for_bomb.csv")
+
+#eggs
+Eggs_c <- read.csv("Data/c_all_eggs_bomb.csv")
+C_other_data <- read.csv("Data/c_all_other_stuff.csv")
+  
+  
+#eggs clean
+Eggs_c_clean <- read.csv("Data/c_clean_bomb.csv")
+
+#another idea: add energy content as covariate in egg size analysis?? Uhhh...later. It's bomb time
+```
+
+Combine data frames so your bomb dataframe has covariates
+```{r}
+#joinby
+#r_bind
+#c_bind
+#see data wrangling worksheet
+
+names(Bomb_df)
+Bomb_df_relevant <- Bomb_df[, c(2,3,6,7,8,9,10)]
+
+#View(GSI_c_clean)
+length(GSI_c_clean$ID)
+(Bomb_df$InvestNo)
+Bomb_df_relevant$ID<-Bomb_df$InvestNo
+(GSI_c$ID)
+#join Bomb_df_relevant with GSI_c. This will remove non-egg bearers (there were sone? and then I can remove weird fishies after)
+Bomb_with_covariates <- left_join(Bomb_df_relevant, GSI_c, by = "ID" )
+length(Bomb_df_relevant$InvestNo)
+length(Bomb_with_covariates$ID) #woohoo, it worked
+
+View(Bomb_with_covariates)
+
+
+```
+
+Add in the covariate of average egg size
+```{r}
+names(Bomb_with_covariates)
+#of interest: GSI
+#add in: average egg size. This exists somewhere.
+#where is my average egg size document?
+names(Eggs_c)
+names(Eggs_c_clean)
+Eggs_c_clean$Fish.ID
+#test <- Eggs_c %>%
+ # group_by(Fish.ID) %>%
+#  select(Fish.ID, Diameter..mm.) %>%
+ # mutate(EggDiam = mean(Diameter..mm.))
+
+Eggs_av <- Eggs_c %>%
+  group_by(Fish.ID) %>%
+  summarize(Eggs_av = mean(Diameter..mm.))
+
+#NICE!
+#combine Eggs_av with Bomb_with_covariates
+names(Bomb_with_covariates)
+Bomb_with_covariates$Fish.ID
+names(Eggs_av)
+
+#join them!!
+Bomb_with_covariates <- left_join(Bomb_with_covariates, Eggs_av, by = "Fish.ID" )
+  
+```
+
+
+Bomb_with_covariates is my dataset right now. Let's check out them covariates!
+(and maybe normality assuption too on the energy and lipid data!!)
+Pause for now. 04/22/22. Above is what to do next.'
+
+05/02/22
+```{r}
+Bomb_with_covariates_notweird <- Bomb_with_covariates %>%
+  filter(Weird=="n")
+Bomb_with_covariates_notweird_noNA <- na.omit(Bomb_with_covariates_notweird)
+##gets rid of fish number 25, where Milo didn't record the GSI
+##ok, that's my DF, the one I want to use.
+```
+
+use this dataframe: Bomb_with_covariates_notweird_noNA
+Covariates of interest: 
+-Egg size
+-Fish length
+- wild or hatch
+
+response var:
+- Energy denstiy
+-Lipid conten
+
+Potentially also:
+- GSI
+```{r}
+names(Bomb_with_covariates_notweird_noNA)
+
+#energy
+ggplot(Bomb_with_covariates_notweird_noNA) + aes(x=Eggs_av, y=BombED.Dry., color=Wild.or.Hatch) + geom_point()
+ggplot(Bomb_with_covariates_notweird_noNA) + aes(x=Length..mm., y=BombED.Dry., color=Wild.or.Hatch) + geom_point()
+
+
+#lipid
+ggplot(Bomb_with_covariates_notweird_noNA) + aes(x=Eggs_av, y=X..lipid, color=Wild.or.Hatch) + geom_point()
+ggplot(Bomb_with_covariates_notweird_noNA) + aes(x=Length..mm., y=X..lipid, color=Wild.or.Hatch) + geom_point()
+
+#interactions?
+ggplot(Bomb_with_covariates_notweird_noNA) + aes(x=Length..mm., y=Eggs_av, color=Wild.or.Hatch) + geom_point() #ummm
+```
+
+So... there's just no diff between W and H, no matter how you look at it. Build a model for this? Maybe? Yes?
+```{r}
+#ED
+names(Bomb_with_covariates_notweird_noNA)
+mod_universal_E <- aov(BombED.Dry. ~ Wild.or.Hatch + Eggs_av + Length..mm.,Bomb_with_covariates_notweird_noNA)
+summary(mod_universal_E)
+
+mod_univ_E_int <- aov(BombED.Dry. ~ Wild.or.Hatch + Eggs_av + Length..mm. + Eggs_av:Length..mm.,Bomb_with_covariates_notweird_noNA)
+summary(mod_univ_E_int)
+
+#additional ED explorations
+#mod_2_E <- aov(BombED.Dry. ~ Wild.or.Hatch + Eggs_av,Bomb_with_covariates_notweird_noNA)
+#summary(mod_2_E) #nothing sig, still
+
+#lipid
+mod_universal_L <- aov(X..lipid ~ Wild.or.Hatch + Eggs_av + Length..mm.,Bomb_with_covariates_notweird_noNA)
+summary(mod_universal_L)
+
+mod_univ_L_int <- aov(X..lipid ~ Wild.or.Hatch + Eggs_av + Length..mm. + Eggs_av:Length..mm.,Bomb_with_covariates_notweird_noNA)
+summary(mod_univ_L_int)
+
+#other 05/24/22
+```
+
+
+Figs for bomb analysis: 
+Bomb fig:
+```{r}
+#energy boxplot
+
+
+#others 
+base.e <- ggplot(Bomb_with_covariates_notweird_noNA) + aes(x=Eggs_av, y=BombED.Dry., color=Wild.or.Hatch) + geom_point()
+ggplot(Bomb_with_covariates_notweird_noNA) + aes(x=Length..mm., y=BombED.Dry., color=Wild.or.Hatch) + geom_point()
+
+library(cowplot)
+#both boxplots, actually
+#class(Bomb_df$Wild_or_hatch)
+Bomb<- ggplot(Bomb_df) + aes(x=Wild_or_hatch, y=BombED.Dry.) + geom_boxplot(outlier.alpha = 0) +    geom_jitter(aes(color=Wild_or_hatch)) +
+ scale_color_manual(values=c("orange", "blue"), name=NULL)+
+  guides(color="none") +
+  labs(y= "Energy density (kJ/g)", x= "Fish origin")+
+  theme_cowplot()
+  
+##may want to note that Energy Density units is kJ/g dry weight
+
+#the lipid content
+Lipid<-ggplot(Bomb_df) + aes(x=Wild_or_hatch, y=X..lipid) + geom_boxplot(outlier.alpha = 0) +    geom_jitter(aes(color=Wild_or_hatch)) +
+ scale_color_manual(values=c("orange", "blue"), name=NULL)+
+  labs(y= "Lipid %", x= "Fish origin")+
+  theme_cowplot()
+
+library(patchwork)
+Bomb + Lipid
+
+#nice plot draft. Probably need to clean up so that Wild and hatchery SAY wild and hatchery, maybe get rid of legend all together
+
+
+#edit 05/23/22
+##making a professional graph. 
+##how to do this again??
+Bomb2 <- Bomb + coord_cartesian(ylim=c(24,27)) + 
+  scale_y_continuous(breaks =c (24, 25, 26, 27), expand=c(0,0)) +
+  scale_x_discrete(labels=c("Hatchery", "Wild"))
+
+Lipid2 <- Lipid + guides(color="none") + #get rid of legend
+  coord_cartesian(ylim=c(4.2,12)) +
+  scale_y_continuous(breaks=c(6, 8, 10,12), expand=c(0,0)) +
+  scale_x_discrete(labels=c("Hatchery", "Wild"))
+
+#I like those. Let's patchwork them
+Bomb2+Lipid2 #need to combine y-axis??
+#how to get rid of x-axis text and then add manual x-axis?
+Bomb3 <- Bomb2 + labs(x=element_blank())
+Lipid3 <- Lipid2 +labs(x=element_blank())
+
+#p4 <- ggplot(data.frame(l = Bomb2$labels$x, x = 0.3, y = 0.3)) +
+      geom_text(aes(x, y, label = l)) + 
+      theme_void() +
+      coord_cartesian(clip = "off")
+
+
+#(Bomb2+ Lipid2)/p4
+xlab <- Lipid$labels$x
+library(grid)      
+
+#Bomb3 + Lipid3
+#grid::grid.draw(grid::textGrob(xlab, x = 0.50, y =0.05))      
+      
+library(gridExtra)
+result <- Bomb3 + Lipid3
+gt <- patchwork::patchworkGrob(result)
+gridExtra::grid.arrange(gt, left = "Disp", bottom = "Hp // Cyl")
+
+result + draw_label(xlab, x=0.5, y=0.5)
+#megan code, to save last plot
+
+
+
+
+#try a different way...
+grid_bomb <- plot_grid(Bomb3, Lipid3, scale=0.95) #seems to work
+
+#temp_bomb <- plot_grid(NULL, grid_bomb, ncol = 2, rel_widths =c(0.5,6))
+bomb_base <- plot_grid(grid_bomb, NULL, ncol = 1, rel_heights = c(9.7,0.3))
+bomb_draw <- ggdraw(bomb_base) + draw_label (xlab, x = 0.56, y = 0.07, size = 14) #bomb_draw looks good! let's save that!
+#use this size dots or larger tho??
+
+
+#megan code, to save last plot
+#does this work with rmd? let's find out!!
+dev.new (width = 3.5, height = 2.225, unit = "in", noRStudioGD = T); last_plot()
+#ggsave ("Bomb_lipid_compound_graph.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
+```
+
+
+Ok so above were my yesterday final graphs
+Today: 05/24/22
+Let's make sina-violin plot final graphs
+I think sina does not allow color, but violin does.
+So hatch orange, wild blue
+```{r}
+library(ggforce)
+?geom_sina
+?geom_violin
+
+View(Bomb_df)
+View(Bomb_with_covariates)
+length(Bomb_with_covariates$ID)
+length(Bomb_df$SIN)
+Bomb_df$Weird
+#Bomb_with_covariates_notweird
+
+#re-do t-test: Bomb_with_covariates_notwerid
+
+#first make the base: energy
+Bomb_v<- ggplot(Bomb_with_covariates_notweird) + aes(x=Wild_or_hatch, y=BombED.Dry.) + geom_violin() +  geom_sina(aes(color=Wild_or_hatch)) +
+ scale_color_manual(values=c("orange", "blue"), name=NULL)+
+  guides(color="none") +
+  labs(y= "Energy density (kJ/g)", x= "Fish origin")+
+  theme_cowplot()
+#that could work.
+
+#then make the base: lipid
+Lipid_v<- ggplot(Bomb_with_covariates_notweird) + aes(x=Wild_or_hatch, y=X..lipid) + geom_violin() +  geom_sina(aes(color=Wild_or_hatch)) +
+ scale_color_manual(values=c("orange", "blue"), name=NULL)+
+  guides(color="none") +
+  labs(y= "Lipid %", x= "Fish origin")+
+  theme_cowplot()
+#that works
+#now lets clean up them graphs
+Bomb_v2 <- Bomb_v + coord_cartesian(ylim=c(24,27)) + 
+  scale_y_continuous(breaks =c (24, 25, 26, 27), expand=c(0,0)) +
+  scale_x_discrete(labels=c("Hatchery", "Wild")) +
+  labs(x=element_blank())
+
+Lipid_v2 <- Lipid_v + guides(color="none") + #get rid of legend
+  coord_cartesian(ylim=c(4.2,12)) +
+  scale_y_continuous(breaks=c(6, 8, 10,12), expand=c(0,0)) +
+  scale_x_discrete(labels=c("Hatchery", "Wild")) +
+  labs(x=element_blank())
+
+#combine them and save ya' x-label
+xlab <- Lipid_v$labels$x
+
+library(gridExtra)
+library(patchwork)
+#the successful combining plots and labels way
+grid_V <- plot_grid(Bomb_v2, Lipid_v2, scale=0.95) #seems to work
+
+#temp_bomb <- plot_grid(NULL, grid_bomb, ncol = 2, rel_widths =c(0.5,6))
+V_base <- plot_grid(grid_V, NULL, ncol = 1, rel_heights = c(9.7,0.3))
+V_draw <- ggdraw(V_base) + draw_label(xlab, x = 0.56, y = 0.07, size = 14) #bomb_draw looks good! let's save that!
+#use this size dots or larger tho??
+#LOOKS GREAT! LEt's save this with megans save-a-plot code!
+dev.new (width = 3.5, height = 2.225, unit = "in", noRStudioGD = T); last_plot()
+ggsave ("Bomb_lipid_VIOLIN_graph.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
+
+#aside:
+##did I use the correct (non-weird... fish for my egg t-test?? I think most were not weird, we can include WF 25... I think... Coho wild 1 and 2 were weird with only a few eggs) # I think I need to make sure I'm using the not weird ones
+##re-do using not weird fish.
+
+##does GSI impact energy or lipid
+###nope, we're good there.
+
+```
+
+
+Lipid fig:
+```{r}
+#lipid boxplot
+
+
+#other
+base.l <- ggplot(Bomb_with_covariates_notweird_noNA) + aes(x=Eggs_av, y=X..lipid, color=Wild.or.Hatch) + geom_point()
+ggplot(Bomb_with_covariates_notweird_noNA) + aes(x=Length..mm., y=X..lipid, color=Wild.or.Hatch) + geom_point()
+```
+
+
+
+```{r}
+summary(mod_E)
+plot(mod_E)
+```
+
+ON WHICH MODEL ARE MY RESULTS BASED?? 05/23/22
+->FROM THE T-TEST!
+-> we used the t-test restults because ANOVA showed that covariates were not signficiant... I think
+-> did GSI have an effect tho?
+```{r}
+#ones not used
+summary.lm(mod_E) 
+summary.lm(mod_universal_E)
+
+#the t-tests
+T_test_ED
+T_test_lipid
+
+#the standard deviations
+##for Energy
+sd(Wild_egg_energy$BombED.Dry.)
+sd(Hatch_egg_energy$BombED.Dry.)
+
+##for Lipid
+sd(Wild_lipid_energy$X..lipid)
+sd(Hatch_lipid_energy$X..lipid)
+
+
+#re-do the t-tests and SD WITHOUT THE WEIRDOS
+#Bomb_with_covariates_notweird
+Wild_egg_energy_noweird <- Bomb_with_covariates_notweird %>% 
+  filter(Wild_or_hatch == "W") %>%
+  select(BombED.Dry.)
+    
+Hatch_egg_energy_noweird <- Bomb_with_covariates_notweird %>% 
+  filter(Wild_or_hatch == "H") %>%
+  select(BombED.Dry.)
+
+(T_test_ED_noweird <- t.test(Hatch_egg_energy_noweird, Wild_egg_energy_noweird, alternative="less", var.equal = T) )
+
+sd(Hatch_egg_energy_noweird$BombED.Dry.)
+sd(Wild_egg_energy_noweird$BombED.Dry.)
+
+#lipid now
+Wild_lipid_noweird <- Bomb_with_covariates_notweird %>% 
+  filter(Wild_or_hatch == "W") %>%
+  select(X..lipid)
+    
+Hatch_lipid_noweird <- Bomb_with_covariates_notweird %>% 
+  filter(Wild_or_hatch == "H") %>%
+  select(X..lipid)
+
+(T_test_lipid_noweird <- t.test(Hatch_lipid_noweird, Wild_lipid_noweird, alternative="less", var.equal = T) )
+
+sd(Hatch_lipid_noweird$X..lipid)
+sd(Wild_lipid_noweird$X..lipid)
+
+```
+GSI sig test -> not sig at all...
+```{r}
+names(Bomb_with_covariates_notweird_noNA)
+universal_bomb <- lm(BombED.Dry. ~ Wild_or_hatch + GSI, data=Bomb_with_covariates_notweird_noNA)
+universal_bomb <- lm(BombED.Dry. ~GSI +  Wild_or_hatch, data=Bomb_with_covariates_notweird_noNA)
+summary(universal_bomb)
+```
+
