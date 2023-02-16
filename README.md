@@ -3,7 +3,7 @@ Cleaning up my master's project code so that other people can easily understand 
 
 This is where I'll combine all of my code so that my masters project results are easily accessible to my advisors. I hope to leave this project clean and concise, as I leave academia and move on to the next thing.
 
-Apologies in advance. My code is a bit meandering. I learned how to code and use github while analyzing this data. My future data analysis will be cleaner and more methodical.
+Apologies in advance. My code is a bit meandering. I learned how to code and use github while analyzing this data. My future data analysis will be cleaner and more methodical, now that I sort of know what I am doing.
 
 
 Male morphometrics:
@@ -19,6 +19,6 @@ The "Bomb_notebook_subsetcoho copy.Rmd" has the subsetted female dataset.
 ---SD calculations in that same code block
 --includes graphs and experimentations
 
-We used the subsetted female dataaset for our primary results.
+We used the subsetted female dataset for our primary results.
 There's a few csv files associated with this one, mostly to add in covariates. In the future I will just use the raw csv files and do manipulation in R. 
 
