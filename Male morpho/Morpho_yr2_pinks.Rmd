@@ -5,37 +5,7 @@ date: "10/12/2021"
 output: html_document
 root.dir : "/Users/alexandrareich/Desktop/MORPHO IN ACTION/WORKDIR"
 ---
-01/14/22
-Added Github connection
 
-01/13/22
-30 min of morning work
-
-01/12/22
-Morning work on MANCOVA (it's all signficant!) and setting up the basic linear morpho analysis
-
-01/06/22
-Removed duplicates and added missing fish
-
-
-Last touched:01/04/22
-Fixed outlier 73
-
-02/11/22 - restarted this file to hopfully fix a github connection issue
-
-
-01/03/22
-
-
-Version to use for Y1 data: Morpho112221
-
-In this version:
-We're just editing the last years data to fit with the NEW morpho data from 2021
-Things we're doing:
--add in morpho 2021 data
-- and use the cubic (rather than quadratic) unbending as an addtional dataframe
-- will explore morpho measuremnents for the 2021 males as well
-THE WORK:
 
 
 First, load the packages
@@ -58,31 +28,31 @@ library(ggforce)
 library(Morpho)
 library(RColorBrewer)
 
-#setwd("/Users/alexandrareich/Desktop/MORPHO IN ACTION/WORKDIR")
-#root.dir("/Users/alexandrareich/Desktop/MORPHO IN ACTION/WORKDIR")
+
 ```
 
 
 Load my tps file
+
 ```{r}
-p2.lands <- readland.tps("/Users/alexandrareich/Desktop/MORPHO IN ACTION/pink 2021 tps files_updated_010522/Files to use for analysis_clarified_010522/pink2021_landmarks.fixed73.deleteextras.appendhere_010522.tps copy", readcurves=T, specID= "imageID")
+p2.lands <- readland.tps("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/pink2021_landmarks.fixed73.deleteextras.appendhere_010522.tps", readcurves=T, specID= "imageID")
 
 
 #need to order this goddamn chaos above. Need to add in hatch or wild. DO THIS NEXT!!!
 
 
-p2.lands.unbent.cubic <- readland.tps("/Users/alexandrareich/Desktop/MORPHO IN ACTION/pink 2021 tps files_updated_010522/Files to use for analysis_clarified_010522/pink2021_cub_010522.tps copy") #no curves, they're all landmarks here. Oh shit, I didn't delete the excess landmakrs. I'll have to go do that. #landmakrs 18 thru 23 need to go because they were just used for unbending.
+p2.lands.unbent.cubic <- readland.tps("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/pink2021_cub_010522.tps copy") #no curves, they're all landmarks here. Oh shit, I didn't delete the excess landmakrs. I'll have to go do that. #landmakrs 18 thru 23 need to go because they were just used for unbending.
 
 
 
 #I don't think I'll use the quadratic unbending. It did not seem to work as well as the cubic
-p2.lands.unbent.quad <- readland.tps("/Users/alexandrareich/Desktop/MORPHO IN ACTION/pink 2021 tps files_updated_010522/Files to use for analysis_clarified_010522/pink2021_quad_010522.tps copy") #this might be wrong. Too few landmakrs. Maybe I didn't properly update in tpsdig.. Oh wait, it looks ok! Just need to delete the excess landmakrs (18 through 23)
+p2.lands.unbent.quad <- readland.tps("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/pink2021_quad_010522.tps copy") #this might be wrong. Too few landmakrs. Maybe I didn't properly update in tpsdig.. Oh wait, it looks ok! Just need to delete the excess landmakrs (18 through 23)
 
 
 
-p2.lands.cub <- p2.lands.unbent.cubic[-18:-23,,] #ok, looks good
+#p2.lands.cub <- p2.lands.unbent.cubic[-18:-23,,] #ok, looks good
   
-p2.lands.quad <- p2.lands.unbent.quad[-18:-23,,]
+#p2.lands.quad <- p2.lands.unbent.quad[-18:-23,,]
 
 ```
 
@@ -135,16 +105,7 @@ I actually dont think the shortcut will be legitimate. Might just have to label 
 Plot all specimens
 ```{r}
 plotAllSpecimens(p2.lands)
-plotAllSpecimens(p2.lands.cub)
-##wow! Unbending makes a HUGE differece!!!
 
-#what does unbent quadratic look like?
-plotAllSpecimens(p2.lands.quad)
-#fuck, these are exactly the same.
-##I bet I fucked up in structing them in tps Util.
-##they are either both cubic or both quadratic.
-##I'll have to go to the bootcamp windows side of my computer and see what went wrong
-##I'll probably
 
 ```
 
@@ -166,15 +127,15 @@ This will only be done once, and the hash-tagged out.
 
 Now transform into Procrustes shape space
 ```{r}
-pinkcurves <- as.matrix(read.csv("/Users/alexandrareich/Desktop/MORPHO IN ACTION/curveslide.csv", header=T))
+pinkcurves <- as.matrix(read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/curveslide.csv", header=T))
 gpa.p2.orig <- gpagen(p2.lands, curves = pinkcurves)
 
-gpa.p2.cub <- gpagen(p2.lands.cub, curves = pinkcurves)
-gpa.p2.quad <- gpagen(p2.lands.quad, curves = pinkcurves)
+#gpa.p2.cub <- gpagen(p2.lands.cub, curves = pinkcurves)
+#gpa.p2.quad <- gpagen(p2.lands.quad, curves = pinkcurves)
 
 plot(gpa.p2.orig)
-plot(gpa.p2.cub)
-plot(gpa.p2.quad)
+#plot(gpa.p2.cub)
+#plot(gpa.p2.quad)
 
 #weird with that one long snout. Looks like we may have an outlier here.
 ```
@@ -185,11 +146,11 @@ plot(pca.p2.orig)
 #identify(pca.p2.orig$x)
 
 
-pca.p2.cub <- gm.prcomp(gpa.p2.cub$coords)
-plot(pca.p2.cub)
+#pca.p2.cub <- gm.prcomp(gpa.p2.cub$coords)
+#plot(pca.p2.cub)
 
-pca.p2.quad <-gm.prcomp(gpa.p2.quad$coords)
-plot(pca.p2.quad)
+#pca.p2.quad <-gm.prcomp(gpa.p2.quad$coords)
+#plot(pca.p2.quad)
 
 
 
@@ -205,7 +166,7 @@ Maybe add in the wild/hatchery factor...
 How did I do this earlier?
 I did this the hard way, there has to be a better way
 ```{r}
-wild.or.hatch <- read.csv("/Users/alexandrareich/Desktop/MORPHO IN ACTION/pink2021.wildorhatch.andorder.csv")
+wild.or.hatch <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/pink2021.wildorhatch.andorder.csv")
 ```
 
 
@@ -213,17 +174,17 @@ Convert to dataframe?
 PCA dataframe
 ```{r}
 df.pink2021.orig <- as.data.frame(pca.p2.orig$x[,1:3])
-df.pink2021.cub <- as.data.frame(pca.p2.cub$x[,1:3])
-df.pink2021.quad <- as.data.frame(pca.p2.quad$x[,1:3])
+#df.pink2021.cub <- as.data.frame(pca.p2.cub$x[,1:3])
+#df.pink2021.quad <- as.data.frame(pca.p2.quad$x[,1:3])
 
 df.pink2021.orig$origin <- wild.or.hatch$Oto
 df.pink2021.orig$ID <- wild.or.hatch$Fish.ID
 
-df.pink2021.cub$origin <- wild.or.hatch$Oto
-df.pink2021.cub$ID <- wild.or.hatch$Fish.ID
+#df.pink2021.cub$origin <- wild.or.hatch$Oto
+#df.pink2021.cub$ID <- wild.or.hatch$Fish.ID
 
-df.pink2021.quad$origin <- wild.or.hatch$Oto
-df.pink2021.quad$ID <- wild.or.hatch$Fish.ID
+#df.pink2021.quad$origin <- wild.or.hatch$Oto
+#df.pink2021.quad$ID <- wild.or.hatch$Fish.ID
 ```
 
 Plot the relative warp analysis(also known as PCA)
@@ -239,17 +200,17 @@ ggplot(data=df.pink2021.orig)+aes(x=Comp3, y=Comp1, color=origin)+geom_point()+s
 ggplot(data=df.pink2021.orig)+aes(x=Comp2, y=Comp1, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 2", y= "RW 1")
 
 #cubic unbended
-ggplot(data=df.pink2021.cub)+aes(x=Comp3, y=Comp1, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 3", y= "RW 1")
+#ggplot(data=df.pink2021.cub)+aes(x=Comp3, y=Comp1, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 3", y= "RW 1")
 
-ggplot(data=df.pink2021.cub)+aes(x=Comp2, y=Comp1, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 2", y= "RW 1")
+#ggplot(data=df.pink2021.cub)+aes(x=Comp2, y=Comp1, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 2", y= "RW 1")
 
 
 #quadratic unbended
-ggplot(data=df.pink2021.quad)+aes(x=Comp3, y=Comp1, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 3", y= "RW 1")
+#ggplot(data=df.pink2021.quad)+aes(x=Comp3, y=Comp1, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 3", y= "RW 1")
 
-ggplot(data=df.pink2021.quad)+aes(x=Comp2, y=Comp1, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 2", y= "RW 1")
+#ggplot(data=df.pink2021.quad)+aes(x=Comp2, y=Comp1, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 2", y= "RW 1")
 
-ggplot(data=df.pink2021.quad)+aes(x=Comp2, y=Comp3, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 2", y= "RW 3")
+#ggplot(data=df.pink2021.quad)+aes(x=Comp2, y=Comp3, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 2", y= "RW 3")
 
 ```
 
@@ -295,35 +256,35 @@ plotRefToTarget(pca.p2.orig$shapes$shapes.comp4$max, ref, method="vector")
 
 #CUBIC
 #pca plot ref to target
-ref2 <- mshape(gpa.p2.cub$coords) 
+#ref2 <- mshape(gpa.p2.cub$coords) 
 #comp1
-plotRefToTarget(pca.p2.cub$shapes$shapes.comp1$min, ref2, method="vector")
-plotRefToTarget(pca.p2.cub$shapes$shapes.comp1$max, ref2, method="vector")
+#plotRefToTarget(pca.p2.cub$shapes$shapes.comp1$min, ref2, method="vector")
+#plotRefToTarget(pca.p2.cub$shapes$shapes.comp1$max, ref2, method="vector")
 #comp2
-plotRefToTarget(pca.p2.cub$shapes$shapes.comp2$min, ref2, method="vector")
-plotRefToTarget(pca.p2.cub$shapes$shapes.comp2$max, ref2, method="vector")
+#plotRefToTarget(pca.p2.cub$shapes$shapes.comp2$min, ref2, method="vector")
+#plotRefToTarget(pca.p2.cub$shapes$shapes.comp2$max, ref2, method="vector")
 #comp3
-plotRefToTarget(pca.p2.cub$shapes$shapes.comp3$min, ref2, method="vector")
-plotRefToTarget(pca.p2.cub$shapes$shapes.comp3$max, ref2, method="vector")
+#plotRefToTarget(pca.p2.cub$shapes$shapes.comp3$min, ref2, method="vector")
+#plotRefToTarget(pca.p2.cub$shapes$shapes.comp3$max, ref2, method="vector")
 #comp4
-plotRefToTarget(pca.p2.cub$shapes$shapes.comp4$min, ref2, method="vector")
-plotRefToTarget(pca.p2.cub$shapes$shapes.comp4$max, ref2, method="vector")
+#plotRefToTarget(pca.p2.cub$shapes$shapes.comp4$min, ref2, method="vector")
+#plotRefToTarget(pca.p2.cub$shapes$shapes.comp4$max, ref2, method="vector")
 
 #QUADRATIC
 #pca plot ref to target
-ref3 <- mshape(gpa.p2.quad$coords) 
+#ref3 <- mshape(gpa.p2.quad$coords) 
 #comp1
-plotRefToTarget(pca.p2.quad$shapes$shapes.comp1$min, ref3, method="vector")
-plotRefToTarget(pca.p2.quad$shapes$shapes.comp1$max, ref3, method="vector")
+#plotRefToTarget(pca.p2.quad$shapes$shapes.comp1$min, ref3, method="vector")
+#plotRefToTarget(pca.p2.quad$shapes$shapes.comp1$max, ref3, method="vector")
 #comp2
-plotRefToTarget(pca.p2.quad$shapes$shapes.comp2$min, ref3, method="vector")
-plotRefToTarget(pca.p2.quad$shapes$shapes.comp2$max, ref3, method="vector")
+#plotRefToTarget(pca.p2.quad$shapes$shapes.comp2$min, ref3, method="vector")
+#plotRefToTarget(pca.p2.quad$shapes$shapes.comp2$max, ref3, method="vector")
 #comp3
-plotRefToTarget(pca.p2.quad$shapes$shapes.comp3$min, ref3, method="vector")
-plotRefToTarget(pca.p2.quad$shapes$shapes.comp3$max, ref3, method="vector")
+#plotRefToTarget(pca.p2.quad$shapes$shapes.comp3$min, ref3, method="vector")
+#plotRefToTarget(pca.p2.quad$shapes$shapes.comp3$max, ref3, method="vector")
 #comp4
-plotRefToTarget(pca.p2.quad$shapes$shapes.comp4$min, ref3, method="vector")
-plotRefToTarget(pca.p2.quad$shapes$shapes.comp4$max, ref3, method="vector")
+#plotRefToTarget(pca.p2.quad$shapes$shapes.comp4$min, ref3, method="vector")
+#plotRefToTarget(pca.p2.quad$shapes$shapes.comp4$max, ref3, method="vector")
 ```
 Plot the wild to hatch comparison: 
 ```{r}
@@ -362,41 +323,32 @@ Quadratioc morpho vidualization comparison:
 ```{r}
 #plotReftoTarget  ##ORIG
 #pinks are in Y.gpa ??
-Y.gpa <- gpa.p2.quad
-ref4 <- mshape(gpa.p2.quad$coords)
-w.p <- numeric()
-h.p <- numeric()
-i=1
+#Y.gpa <- gpa.p2.quad
+#ref4 <- mshape(gpa.p2.quad$coords)
+#w.p <- numeric()
+#h.p <- numeric()
+#i=1
 
-for (i in 1:length(df.pink2021.orig$origin)){
-  if(df.pink2021.orig$origin[i]=="W"){
-    w.p <- c(w.p, i)
-  }else{
-    h.p <- c(h.p, i)
-  }
-}
+#for (i in 1:length(df.pink2021.orig$origin)){
+  #if(df.pink2021.orig$origin[i]=="W"){
+   # w.p <- c(w.p, i)
+  #}else{
+   # h.p <- c(h.p, i)
+  #}
+#}
 
-ref.w.p2 <-mshape(Y.gpa$coords[,,w.p]) #wild mean
-ref.h.p2 <-mshape(Y.gpa$coords[,,h.p]) #hatchery mean
+#ref.w.p2 <-mshape(Y.gpa$coords[,,w.p]) #wild mean
+#ref.h.p2 <-mshape(Y.gpa$coords[,,h.p]) #hatchery mean
 
 #wild to hatch, hatch to wild examine
 #plotRefToTarget(ref.w.p2, ref.h.p2, method="vector", mag=5) #what is happening here? is wild plotted to hatch or hatch plotted to wild?
-plotRefToTarget(ref.h.p2, ref.w.p2, method="vector", mag=5) #hatchery dots, wild arrows
+#plotRefToTarget(ref.h.p2, ref.w.p2, method="vector", mag=5) #hatchery dots, wild arrows
 #HYPOTHESIS SUPPORTED! DAMN!
 
 
-plotRefToTarget(ref.w.p2, ref.h.p2, method="vector", mag=5) #wild dot, hatchery arrows
+#plotRefToTarget(ref.w.p2, ref.h.p2, method="vector", mag=5) #wild dot, hatchery arrows
 #plotRefToTarget(ref.w.p2, ref4, method="vector", mag=5) #wild to mean fish
 #plotRefToTarget(ref.h.p2, ref4, method="vector", mag=5) #hatchery to mean fish
-```
-
-
-
-IDEA: what if I remove hatchery snakey fish? (there were four of them)
-(Which ones were the snakes?)
-(the ones with reall small dpeths)
-```{r}
-
 ```
 
 
@@ -418,34 +370,34 @@ CVA.pink <- CVA(vari, groups=facto)
 
 
 #CUBIC UNBEND
-pvar <- (pca.p2.cub$sdev^2)/(sum(pca.p2.cub$sdev^2)) #sooo...does this work?
-names(pvar) <- seq(1:length(pvar))
-barplot(pvar, xlab= "Principal Components", ylab = "% Variance")
+#pvar <- (pca.p2.cub$sdev^2)/(sum(pca.p2.cub$sdev^2)) #sooo...does this work?
+#names(pvar) <- seq(1:length(pvar))
+#barplot(pvar, xlab= "Principal Components", ylab = "% Variance")
 
 #also plot the CVA, please
-vari <- gpa.p2.cub$coords
-facto <- df.pink2021.cub$origin
+#vari <- gpa.p2.cub$coords
+#facto <- df.pink2021.cub$origin
 
-CVA.pink <- CVA(vari, groups=facto)
+#CVA.pink <- CVA(vari, groups=facto)
 
 
 #QUADRATIC UNBEND
-pvar <- (pca.p2.quad$sdev^2)/(sum(pca.p2.quad$sdev^2)) #sooo...does this work?
-names(pvar) <- seq(1:length(pvar))
-barplot(pvar, xlab= "Principal Components", ylab = "% Variance")
+#pvar <- (pca.p2.quad$sdev^2)/(sum(pca.p2.quad$sdev^2)) #sooo...does this work?
+#names(pvar) <- seq(1:length(pvar))
+#barplot(pvar, xlab= "Principal Components", ylab = "% Variance")
 
 #also plot the CVA, please
-vari <- gpa.p2.quad$coords
-facto <- df.pink2021.quad$origin
+#vari <- gpa.p2.quad$coords
+#facto <- df.pink2021.quad$origin
 
-CVA.pink <- CVA(vari, groups=facto)
+#CVA.pink <- CVA(vari, groups=facto)
 
 
 ```
 
 
 Significance test?
-MANCOVA.... IN PROGRESS
+MANCOVA
 ```{r}
 #ORIGINAL
 Y.gpa <- gpa.p2.orig
@@ -464,30 +416,30 @@ summary(fit.p.int)  #interaction effects not significant!
 
 
 #CUBIC
-Y.gpa <- gpa.p2.cub
-gdf <- geomorph.data.frame(Y.gpa, origin = df.pink2021.cub$origin)
+#Y.gpa <- gpa.p2.cub
+#gdf <- geomorph.data.frame(Y.gpa, origin = df.pink2021.cub$origin)
 
-fit.p <- procD.lm(coords ~ log(Csize) + origin, data = gdf,  #all coords taken into account
-iter = 9999, print.progress = FALSE, RRPP=TRUE)
-summary(fit.p)  #says YES, significant difference between wild and hatch. Centroid size is less sig than original
+#fit.p <- procD.lm(coords ~ log(Csize) + origin, data = gdf,  #all coords taken into account
+#iter = 9999, print.progress = FALSE, RRPP=TRUE)
+#summary(fit.p)  #says YES, significant difference between wild and hatch. Centroid size is less sig than original
 
 #are interaction effects a thing?
-fit.p.int <- procD.lm(coords ~ log(Csize) + origin + log(Csize)*origin, data = gdf,  #all coords taken into account
-iter = 9999, print.progress = FALSE, RRPP=TRUE)
-summary(fit.p.int)  #interaction effects not significant!
+#fit.p.int <- procD.lm(coords ~ log(Csize) + origin + log(Csize)*origin, data = gdf,  #all coords taken into account
+#iter = 9999, print.progress = FALSE, RRPP=TRUE)
+#summary(fit.p.int)  #interaction effects not significant!
 
 #QUADRATIC
-Y.gpa <- gpa.p2.quad
-gdf <- geomorph.data.frame(Y.gpa, origin = df.pink2021.quad$origin)
+#Y.gpa <- gpa.p2.quad
+#gdf <- geomorph.data.frame(Y.gpa, origin = df.pink2021.quad$origin)
 
-fit.p <- procD.lm(coords ~ log(Csize) + origin, data = gdf,  #all coords taken into account
-iter = 9999, print.progress = FALSE, RRPP=TRUE)
-summary(fit.p)  #says YES, significant difference between wild and hatch. Centroid size is less sig than original
+#fit.p <- procD.lm(coords ~ log(Csize) + origin, data = gdf,  #all coords taken into account
+#iter = 9999, print.progress = FALSE, RRPP=TRUE)
+#summary(fit.p)  #says YES, significant difference between wild and hatch. Centroid size is less sig than original
 
 #are interaction effects a thing?
-fit.p.int <- procD.lm(coords ~ log(Csize) + origin + log(Csize)*origin, data = gdf,  #all coords taken into account
-iter = 9999, print.progress = FALSE, RRPP=TRUE)
-summary(fit.p.int)  #interaction effects not significant!
+#fit.p.int <- procD.lm(coords ~ log(Csize) + origin + log(Csize)*origin, data = gdf,  #all coords taken into account
+#iter = 9999, print.progress = FALSE, RRPP=TRUE)
+#summary(fit.p.int)  #interaction effects not significant!
 
 #check resids or anything like that?
 
@@ -513,7 +465,7 @@ summary(fit.p)
 #df.pink2021.orig
 
 #what dataframe is needed for this combination??
-p_2_old <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Morpho_Code_040522/Data/Male.p2.Rdata.2_alt_ID.csv") #not working...why?
+p_2_old <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Male.p2.Rdata.2_alt_ID.csv") #not working...why?
 names(p_2_old)
 p_2_old$ID
 df.pink2021.orig$ID
@@ -591,7 +543,7 @@ fit.p_05$aov.table
 Where's my OG pink 2021 morpho data?
 THESIS TIME!/Field Data Year 2/FISH
 ```{r}
-p2.males <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Fish/Male.p2.Rdata.2.csv")
+p2.males <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Male.p2.Rdata.2.csv")
 ```
 
 
@@ -762,7 +714,7 @@ notresults4 <- t.test(h$Body.depth.mm., w$Body.depth.mm.)
 #View(p2_male_date_adj)
 
 #ok, fixed the date bullshit
-p2.males_dateadj<- read.csv("p2.males2_dateadj.csv")
+p2.males_dateadj<- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/p2.males2_dateadj.csv")
 
 #GRAPHS WITH DATE
 ggplot(p2.males_dateadj) + aes(x=Date_adj, y=Body.depth.mm.) + geom_boxplot() + geom_jitter(aes(color=Otolith.reading, shape=Location))
@@ -916,7 +868,7 @@ library(viridis)
 #need mean consensus shape per Julian date
 
 unique(gdf_Julian$date)
-coords_252 <- df_p2_reversed_Julian  %>% filter(date==252)
+#coords_252 <- df_p2_reversed_Julian  %>% filter(date==252)
 coords_array <- gdf_Julian$coords
 coords_df <- as.data.frame(coords_array)
 
@@ -1024,14 +976,14 @@ df_243 <-data.frame(ref_243)
 
 
 pallete <- scale_color_grey()
-ggplot() + aes() + geom_point(data=df_236,aes(x=X, y=Y)) +
-  geom_point(data=df_238,aes(x=X, y=Y), color=grey12.5)+
-  geom_point(data=df_242,aes(x=X, y=Y), color=grey15) +
-  geom_point(data=df_243,aes(x=X, y=Y)) +
-  geom_point(data=df_245,aes(x=X, y=Y))+
-  geom_point(data=df_251,aes(x=X, y=Y))+
-  geom_point(data=df_252,aes(x=X, y=Y))+
-  geom_point(data=df_255,aes(x=X, y=Y))
+#ggplot() + aes() + geom_point(data=df_236,aes(x=X, y=Y)) +
+  #geom_point(data=df_238,aes(x=X, y=Y), color=grey12.5)+
+  #geom_point(data=df_242,aes(x=X, y=Y), color=grey15) +
+  #geom_point(data=df_243,aes(x=X, y=Y)) +
+  #geom_point(data=df_245,aes(x=X, y=Y))+
+  #geom_point(data=df_251,aes(x=X, y=Y))+
+  #geom_point(data=df_252,aes(x=X, y=Y))+
+  #geom_point(data=df_255,aes(x=X, y=Y))
 #BELOW NEEDS EDIT, use for example
 
 #canprobs combine into one df, with date
@@ -1092,7 +1044,7 @@ dev.new (width = 9, height = 3, unit = "in", noRStudioGD = T); last_plot()
 No snaky fish tests 06/02/22
 ```{r}
 p2.males1
-ggplot(p2.males1) + aes(y=Body.depth.mm., x=Length.mm.) + geom_point()
+#ggplot(p2.males1) + aes(y=Body.depth.mm., x=Length.mm.) + geom_point()
 p2.males1_nosnakes <- p2.males1 %>% filter(Body.depth.mm.>80)
 
 snakes <- p2.males1 %>% filter(Body.depth.mm.<80)
