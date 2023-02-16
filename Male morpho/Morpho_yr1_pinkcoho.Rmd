@@ -376,7 +376,7 @@ gpa_coho <- gpagen(coho_lands, curves=pinkcurves) #should be the same matrix as 
 #plotAllSpecimens(coho_lands)
 plot(gpa_coho)
 
-gpa_coho_long <- gpagen(coho_lands_long, curves=pinkcurves)
+gpa_coho_long <- gpagen(coho_lands_long, curves=pinkcurves) #pink sliders same as coho for id purposes, so OK to use here.
 #plotAllSpecimens(coho_lands_long)
 plot(gpa_coho_long)
 
@@ -600,12 +600,15 @@ CVA.pink <- CVA(vari, groups=facto)
 
 07/20/21
 SEMILANDMARKS ADJUSTMENTS
-Because I traced curves, I may need semilandmarks. I also may need to revise these traced curves in TPS DIG, so that I don't resample. This either requires going back and drawing curves, or more semilandmarks
+
 
 From the ?readlands.tps()
 - 'if readcurves = TRUE, the coord data for the curves will be returned ans semilandmarks and appended to the fixed landmark data. THE USER THEN NEEDS TO USE define.sliders TO CREATE A MATRIX DESIGNATING HOW THE CURVE POINTS WILL SLIDE' - so I need to do this
 
+02/16/23 comments: below is redundant, I added sliders to the above analysis.
 
+
+How I created the sliders, originally:
 ```{r}
 ?define.sliders
 #don't use surfsliders- that's only for 3D
@@ -1036,7 +1039,7 @@ sd(wild_S.p$depth)
 Length pinks: 
 ```{r}
 #get the lengths for pink
-p.dat <- read.csv("/Users/alexandrareich/Desktop/Masters Proposal/R_code_Git_WD/MASTERMalePinksQC.reorder.csv")
+p.dat <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/MASTERMalePinksQC.reorder.csv")
 #names(p.dat)
 length_p <- p.dat$Length..mm.
 
@@ -1185,52 +1188,6 @@ summary(mod.p.s.l_05)
 ```
 
 
-NEXT
-
-residual plots of models
-```{r}
-#####coho depth (long fish)
-#residual vs. fitted plot
-res <- resid(model.aov.cD)
-plot(fitted(model.aov.cD), res) 
-abline(0,0)
-
-#qq plot
-qqnorm(res)
-qqline(res)
-
-#density plot
-plot(density(res))
-
-#####coho depth (all fish)
-
-
-#######coho snout (long fish)
-res <- resid(mod.c.snout)
-plot(fitted(mod.c.snout), res)
-abline(0,0)
-#qq plot
-qqnorm(res)
-qqline(res)
-#density plot
-plot(density(res))
-
-#maybe test for normality? meh, qq is pretty solid
-
-
-#PINK- PROBLEM
-library(car)
-leveneTest
-
-res <- resid(mod.p.d.l)
-plot(fitted.values(mod.p.d.l), res)
-abline(0,0)
-#qq plot
-qqnorm(res)
-qqline(res)
-#density plot
-plot(density(res))
-```
 
 
 Here's a concept, plot things the easy way
@@ -1360,21 +1317,6 @@ plotAllSpecimens(pinkdat.landsno56[,,h.p])
 
 
 
-RW correlations: 10/13/21 (can't remember why I wanted to do this)
-See undergraduate student guide to geometric morphometrics
-See if a RW is correlated with body size (Csize)... but why?
-```{r}
-
-```
-
-
-Edits 10/25/21
-#need to graph pinks without the outlier
-```{r}
-
-```
-
-
 #prepping other graphs for balitimore
 ```{r}
 #p1 with fixed legend
@@ -1460,17 +1402,8 @@ ggplot(df.pink2) +geom_point(size=3, aes(y=depth, x=length, color=Wild.or.hatch)
   scale_color_manual(breaks =c("W","H"), values=c("blue", "orange"), name=element_blank(), labels=c("Wild origin", "Hatchery origin")) + theme_cowplot() + labs(x="MEHP length (mm)", y= "Depth (mm)")+
   guides(color="none")
 
-#coho 2020 ##DO TONIGHT
 
 
-
-```
-
-
-
-?trajectory.analysis????? 11_01_21
-?plotAllometry
-```{r}
 
 ```
 
@@ -1569,7 +1502,6 @@ sd(df.evenpink.W$length)
 Tedious multi-pane graphing, oh boy!
 Final graph compilation
 ```{r}
-##fuck. we're going to want to go back and remove unusually long fish from analysis
 ######################################3
 #pink 2020 graph base (logged)
 ##fuck. we're going to want to go back and remove unusually long fish from analysis
@@ -1614,8 +1546,4 @@ length(how_many_hatch$Wild.or.hatch)
 #df.coho.long%>% filter(Wild.or.hatch=="W"))
 ```
 
-Time for a length comparison graph
-```{r}
-
-```
 
