@@ -1,0 +1,1150 @@
+---
+title: "Morphcontinued"
+author: "Alex"
+date: "10/12/2021"
+output: html_document
+root.dir : "/Users/alexandrareich/Desktop/MORPHO IN ACTION/WORKDIR"
+---
+01/14/22
+Added Github connection
+
+01/13/22
+30 min of morning work
+
+01/12/22
+Morning work on MANCOVA (it's all signficant!) and setting up the basic linear morpho analysis
+
+01/06/22
+Removed duplicates and added missing fish
+
+
+Last touched:01/04/22
+Fixed outlier 73
+
+02/11/22 - restarted this file to hopfully fix a github connection issue
+
+
+01/03/22
+
+
+Version to use for Y1 data: Morpho112221
+
+In this version:
+We're just editing the last years data to fit with the NEW morpho data from 2021
+Things we're doing:
+-add in morpho 2021 data
+- and use the cubic (rather than quadratic) unbending as an addtional dataframe
+- will explore morpho measuremnents for the 2021 males as well
+THE WORK:
+
+
+First, load the packages
+
+```{r}
+library(ggplot2)
+library(geomorph)
+#library(shapes)
+#library(MASS)
+#library(ape)
+#library(vegan)
+#library(rgl)
+#library(scatterplot3d)
+library(ggfortify)
+library(dplyr)
+#library(reshape2)
+#library(reshape)
+library(tidyr)
+library(ggforce)
+library(Morpho)
+library(RColorBrewer)
+
+#setwd("/Users/alexandrareich/Desktop/MORPHO IN ACTION/WORKDIR")
+#root.dir("/Users/alexandrareich/Desktop/MORPHO IN ACTION/WORKDIR")
+```
+
+
+Load my tps file
+```{r}
+p2.lands <- readland.tps("/Users/alexandrareich/Desktop/MORPHO IN ACTION/pink 2021 tps files_updated_010522/Files to use for analysis_clarified_010522/pink2021_landmarks.fixed73.deleteextras.appendhere_010522.tps copy", readcurves=T, specID= "imageID")
+
+
+#need to order this goddamn chaos above. Need to add in hatch or wild. DO THIS NEXT!!!
+
+
+p2.lands.unbent.cubic <- readland.tps("/Users/alexandrareich/Desktop/MORPHO IN ACTION/pink 2021 tps files_updated_010522/Files to use for analysis_clarified_010522/pink2021_cub_010522.tps copy") #no curves, they're all landmarks here. Oh shit, I didn't delete the excess landmakrs. I'll have to go do that. #landmakrs 18 thru 23 need to go because they were just used for unbending.
+
+
+
+#I don't think I'll use the quadratic unbending. It did not seem to work as well as the cubic
+p2.lands.unbent.quad <- readland.tps("/Users/alexandrareich/Desktop/MORPHO IN ACTION/pink 2021 tps files_updated_010522/Files to use for analysis_clarified_010522/pink2021_quad_010522.tps copy") #this might be wrong. Too few landmakrs. Maybe I didn't properly update in tpsdig.. Oh wait, it looks ok! Just need to delete the excess landmakrs (18 through 23)
+
+
+
+p2.lands.cub <- p2.lands.unbent.cubic[-18:-23,,] #ok, looks good
+  
+p2.lands.quad <- p2.lands.unbent.quad[-18:-23,,]
+
+```
+
+
+Wild/hatch vector add
+```{r}
+#wild or hatch vector... 100 fish long...
+#p2.lands
+#p2.lands[,,20:30]
+
+#FISH 30 IS A DUPLICATE? WTH? W fisj 4 is duplicated? need to check this in TPS DIg in the windows world
+
+#read in the vector
+#wildhatch <- read.csv("/Users/alexandrareich/Desktop/MORPHO IN ACTION/pink2021.wildorhatch.andorder.csv")
+
+#wildtest <- wildhatch %>% filter(Wild.or.hatch=="H")
+#length(wildtest$Wild.or.hatch) #50 W and 50 H specimens, nice
+?duplicated
+?anyDuplicated
+
+#anyDuplicated(wildhatch$Fish.ID)
+#anyDuplicated(p2.lands$)
+#ordered(wildtest$Fish.ID)
+#i=1
+#for (i in 1:100){
+#if(wildhatch$Fish.ID[i]=="W1"){print("yes")}
+  #i+1
+#}
+
+
+#i=1
+#for (i in 1:100){
+#if(wildhatch$Fish.ID[i]!="W"){print(i)}
+  #i+1
+#}
+
+```
+
+
+
+Figuring out the order to see if I can take a shortcut with the wild/hatch labeling...
+I actually dont think the shortcut will be legitimate. Might just have to label by hand :(
+```{r}
+#head(p2.lands)
+#head(p2.lands.check.only)
+
+```
+
+
+Plot all specimens
+```{r}
+plotAllSpecimens(p2.lands)
+plotAllSpecimens(p2.lands.cub)
+##wow! Unbending makes a HUGE differece!!!
+
+#what does unbent quadratic look like?
+plotAllSpecimens(p2.lands.quad)
+#fuck, these are exactly the same.
+##I bet I fucked up in structing them in tps Util.
+##they are either both cubic or both quadratic.
+##I'll have to go to the bootcamp windows side of my computer and see what went wrong
+##I'll probably
+
+```
+
+
+
+Add the sliding semi-landmarks to both the original and cubic-unbent dataset.
+This will only be done once, and the hash-tagged out.
+--Upon some digging it turns out that all the pink semilandmark curve references are the same, so I'll use the same file (curveslide in the MORPHO IN ACTION folder for the pinks).
+```{r}
+#pinks 21 original
+#define.sliders(p2.lands[,,1], nsliders=3)
+#needs to be done not in a chunk
+
+#pinks 21 unbent cubic
+#define.sliders(p2.lands.unbent.cubic[,,1], nsliders=3)
+
+
+```
+
+Now transform into Procrustes shape space
+```{r}
+pinkcurves <- as.matrix(read.csv("/Users/alexandrareich/Desktop/MORPHO IN ACTION/curveslide.csv", header=T))
+gpa.p2.orig <- gpagen(p2.lands, curves = pinkcurves)
+
+gpa.p2.cub <- gpagen(p2.lands.cub, curves = pinkcurves)
+gpa.p2.quad <- gpagen(p2.lands.quad, curves = pinkcurves)
+
+plot(gpa.p2.orig)
+plot(gpa.p2.cub)
+plot(gpa.p2.quad)
+
+#weird with that one long snout. Looks like we may have an outlier here.
+```
+Now run a PCA
+```{r}
+pca.p2.orig <- gm.prcomp(gpa.p2.orig$coords)
+plot(pca.p2.orig)
+#identify(pca.p2.orig$x)
+
+
+pca.p2.cub <- gm.prcomp(gpa.p2.cub$coords)
+plot(pca.p2.cub)
+
+pca.p2.quad <-gm.prcomp(gpa.p2.quad$coords)
+plot(pca.p2.quad)
+
+
+
+```
+
+
+
+
+
+
+Now what?
+Maybe add in the wild/hatchery factor...
+How did I do this earlier?
+I did this the hard way, there has to be a better way
+```{r}
+wild.or.hatch <- read.csv("/Users/alexandrareich/Desktop/MORPHO IN ACTION/pink2021.wildorhatch.andorder.csv")
+```
+
+
+Convert to dataframe?
+PCA dataframe
+```{r}
+df.pink2021.orig <- as.data.frame(pca.p2.orig$x[,1:3])
+df.pink2021.cub <- as.data.frame(pca.p2.cub$x[,1:3])
+df.pink2021.quad <- as.data.frame(pca.p2.quad$x[,1:3])
+
+df.pink2021.orig$origin <- wild.or.hatch$Oto
+df.pink2021.orig$ID <- wild.or.hatch$Fish.ID
+
+df.pink2021.cub$origin <- wild.or.hatch$Oto
+df.pink2021.cub$ID <- wild.or.hatch$Fish.ID
+
+df.pink2021.quad$origin <- wild.or.hatch$Oto
+df.pink2021.quad$ID <- wild.or.hatch$Fish.ID
+```
+
+Plot the relative warp analysis(also known as PCA)
+```{r}
+#original
+wildhatch <- c("orange", "blue")
+
+#(plotp<-ggplot(data=df.pink2)+aes(x=Comp1, y=Comp2, color=Wild.or.hatch)+geom_point()+scale_color_manual(values=wildhatch)+
+#  stat_ellipse() + theme_cowplot())
+
+ggplot(data=df.pink2021.orig)+aes(x=Comp3, y=Comp1, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 3", y= "RW 1")
+
+ggplot(data=df.pink2021.orig)+aes(x=Comp2, y=Comp1, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 2", y= "RW 1")
+
+#cubic unbended
+ggplot(data=df.pink2021.cub)+aes(x=Comp3, y=Comp1, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 3", y= "RW 1")
+
+ggplot(data=df.pink2021.cub)+aes(x=Comp2, y=Comp1, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 2", y= "RW 1")
+
+
+#quadratic unbended
+ggplot(data=df.pink2021.quad)+aes(x=Comp3, y=Comp1, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 3", y= "RW 1")
+
+ggplot(data=df.pink2021.quad)+aes(x=Comp2, y=Comp1, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 2", y= "RW 1")
+
+ggplot(data=df.pink2021.quad)+aes(x=Comp2, y=Comp3, color=origin)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 2", y= "RW 3")
+
+```
+
+What do these RW's mean???
+Original
+Comp 1: hump, and a little bit of snout
+Comp 2: bendy fish
+comp 3: overall fish largeness, some depth involved
+Comp4: snout, strech of hump linearly
+
+Cubic unbend
+C1: Depth, some snout
+C2: bend... I thought I unbent these fish?!?!
+C3: Depth again, not snout
+C4:snout
+
+Quadratic unbend
+C1: hump, snout
+C2: bending still... but it is less than other bending?
+C3: proportions and a bit of depth
+C4:smaller proportions, less significant I think
+
+```{r}
+#plotRefToTarget()
+
+#ORIGINAL
+#pca plot ref to target
+ref <- mshape(gpa.p2.orig$coords) 
+ref_p2 <- mshape(gpa.p2.orig$coords) 
+#comp1
+plotRefToTarget(pca.p2.orig$shapes$shapes.comp1$min, ref, method="vector")
+plotRefToTarget(pca.p2.orig$shapes$shapes.comp1$max, ref, method="vector")
+#comp2
+plotRefToTarget(pca.p2.orig$shapes$shapes.comp2$min, ref, method="vector")
+plotRefToTarget(pca.p2.orig$shapes$shapes.comp2$max, ref, method="vector")
+#comp3
+plotRefToTarget(pca.p2.orig$shapes$shapes.comp3$min, ref, method="vector")
+plotRefToTarget(pca.p2.orig$shapes$shapes.comp3$max, ref, method="vector")
+#comp4
+plotRefToTarget(pca.p2.orig$shapes$shapes.comp4$min, ref, method="vector")
+plotRefToTarget(pca.p2.orig$shapes$shapes.comp4$max, ref, method="vector")
+
+
+#CUBIC
+#pca plot ref to target
+ref2 <- mshape(gpa.p2.cub$coords) 
+#comp1
+plotRefToTarget(pca.p2.cub$shapes$shapes.comp1$min, ref2, method="vector")
+plotRefToTarget(pca.p2.cub$shapes$shapes.comp1$max, ref2, method="vector")
+#comp2
+plotRefToTarget(pca.p2.cub$shapes$shapes.comp2$min, ref2, method="vector")
+plotRefToTarget(pca.p2.cub$shapes$shapes.comp2$max, ref2, method="vector")
+#comp3
+plotRefToTarget(pca.p2.cub$shapes$shapes.comp3$min, ref2, method="vector")
+plotRefToTarget(pca.p2.cub$shapes$shapes.comp3$max, ref2, method="vector")
+#comp4
+plotRefToTarget(pca.p2.cub$shapes$shapes.comp4$min, ref2, method="vector")
+plotRefToTarget(pca.p2.cub$shapes$shapes.comp4$max, ref2, method="vector")
+
+#QUADRATIC
+#pca plot ref to target
+ref3 <- mshape(gpa.p2.quad$coords) 
+#comp1
+plotRefToTarget(pca.p2.quad$shapes$shapes.comp1$min, ref3, method="vector")
+plotRefToTarget(pca.p2.quad$shapes$shapes.comp1$max, ref3, method="vector")
+#comp2
+plotRefToTarget(pca.p2.quad$shapes$shapes.comp2$min, ref3, method="vector")
+plotRefToTarget(pca.p2.quad$shapes$shapes.comp2$max, ref3, method="vector")
+#comp3
+plotRefToTarget(pca.p2.quad$shapes$shapes.comp3$min, ref3, method="vector")
+plotRefToTarget(pca.p2.quad$shapes$shapes.comp3$max, ref3, method="vector")
+#comp4
+plotRefToTarget(pca.p2.quad$shapes$shapes.comp4$min, ref3, method="vector")
+plotRefToTarget(pca.p2.quad$shapes$shapes.comp4$max, ref3, method="vector")
+```
+Plot the wild to hatch comparison: 
+```{r}
+
+#plotReftoTarget  ##ORIG
+#pinks are in Y.gpa ??
+Y.gpa <- gpa.p2.orig
+ref4 <- mshape(gpa.p2.orig$coords)
+w.p <- numeric()
+h.p <- numeric()
+i=1
+
+for (i in 1:length(df.pink2021.orig$origin)){
+  if(df.pink2021.orig$origin[i]=="W"){
+    w.p <- c(w.p, i)
+  }else{
+    h.p <- c(h.p, i)
+  }
+}
+
+ref.w.p2 <-mshape(Y.gpa$coords[,,w.p]) #wild mean
+ref.h.p2 <-mshape(Y.gpa$coords[,,h.p]) #hatchery mean
+
+#wild to hatch, hatch to wild examine
+plotRefToTarget(ref.w.p2, ref.h.p2, method="vector", mag=5) #what is happening here? is wild plotted to hatch or hatch plotted to wild?
+plotRefToTarget(ref.h.p2, ref.w.p2, method="vector", mag=5) #hatchery dots, wild arrows
+#HYPOTHESIS SUPPORTED! DAMN!
+
+
+plotRefToTarget(ref.w.p2, ref.h.p2, method="vector", mag=5) #wild dot, hatchery arrows
+plotRefToTarget(ref.w.p2, ref4, method="vector", mag=5) #wild to mean fish
+plotRefToTarget(ref.h.p2, ref4, method="vector", mag=5) #hatchery to mean fish
+```
+
+Quadratioc morpho vidualization comparison:
+```{r}
+#plotReftoTarget  ##ORIG
+#pinks are in Y.gpa ??
+Y.gpa <- gpa.p2.quad
+ref4 <- mshape(gpa.p2.quad$coords)
+w.p <- numeric()
+h.p <- numeric()
+i=1
+
+for (i in 1:length(df.pink2021.orig$origin)){
+  if(df.pink2021.orig$origin[i]=="W"){
+    w.p <- c(w.p, i)
+  }else{
+    h.p <- c(h.p, i)
+  }
+}
+
+ref.w.p2 <-mshape(Y.gpa$coords[,,w.p]) #wild mean
+ref.h.p2 <-mshape(Y.gpa$coords[,,h.p]) #hatchery mean
+
+#wild to hatch, hatch to wild examine
+#plotRefToTarget(ref.w.p2, ref.h.p2, method="vector", mag=5) #what is happening here? is wild plotted to hatch or hatch plotted to wild?
+plotRefToTarget(ref.h.p2, ref.w.p2, method="vector", mag=5) #hatchery dots, wild arrows
+#HYPOTHESIS SUPPORTED! DAMN!
+
+
+plotRefToTarget(ref.w.p2, ref.h.p2, method="vector", mag=5) #wild dot, hatchery arrows
+#plotRefToTarget(ref.w.p2, ref4, method="vector", mag=5) #wild to mean fish
+#plotRefToTarget(ref.h.p2, ref4, method="vector", mag=5) #hatchery to mean fish
+```
+
+
+
+IDEA: what if I remove hatchery snakey fish? (there were four of them)
+(Which ones were the snakes?)
+(the ones with reall small dpeths)
+```{r}
+
+```
+
+
+
+PCA influence
+Noted: bending (RW2) is decreased with the quadratic unbending(desirable?) and increased with cubic unbending (undesirable?).... I should read more about unbending...
+```{r}
+#ORIGINAL
+#can you also plot the ID of the important PCs???
+pvar2 <- (pca.p2.orig$sdev^2)/(sum(pca.p2.orig$sdev^2)) #sooo...does this work?
+names(pvar2) <- seq(1:length(pvar2))
+barplot(pvar2, xlab= "Principal Components", ylab = "% Variance")
+
+#also plot the CVA, please
+vari <- gpa.p2.orig$coords
+facto <- df.pink2021.orig$origin
+
+CVA.pink <- CVA(vari, groups=facto)
+
+
+#CUBIC UNBEND
+pvar <- (pca.p2.cub$sdev^2)/(sum(pca.p2.cub$sdev^2)) #sooo...does this work?
+names(pvar) <- seq(1:length(pvar))
+barplot(pvar, xlab= "Principal Components", ylab = "% Variance")
+
+#also plot the CVA, please
+vari <- gpa.p2.cub$coords
+facto <- df.pink2021.cub$origin
+
+CVA.pink <- CVA(vari, groups=facto)
+
+
+#QUADRATIC UNBEND
+pvar <- (pca.p2.quad$sdev^2)/(sum(pca.p2.quad$sdev^2)) #sooo...does this work?
+names(pvar) <- seq(1:length(pvar))
+barplot(pvar, xlab= "Principal Components", ylab = "% Variance")
+
+#also plot the CVA, please
+vari <- gpa.p2.quad$coords
+facto <- df.pink2021.quad$origin
+
+CVA.pink <- CVA(vari, groups=facto)
+
+
+```
+
+
+Significance test?
+MANCOVA.... IN PROGRESS
+```{r}
+#ORIGINAL
+Y.gpa <- gpa.p2.orig
+gdf <- geomorph.data.frame(Y.gpa, origin = df.pink2021.orig$origin)
+
+fit.p <- procD.lm(coords ~ log(Csize) + origin, data = gdf,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.p)  #says YES, significant difference between wild and hatch
+
+#are interaction effects a thing?
+fit.p.int <- procD.lm(coords ~ log(Csize) + origin + log(Csize)*origin, data = gdf,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.p.int)  #interaction effects not significant!
+
+#Maybe test the relative warps
+
+
+#CUBIC
+Y.gpa <- gpa.p2.cub
+gdf <- geomorph.data.frame(Y.gpa, origin = df.pink2021.cub$origin)
+
+fit.p <- procD.lm(coords ~ log(Csize) + origin, data = gdf,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.p)  #says YES, significant difference between wild and hatch. Centroid size is less sig than original
+
+#are interaction effects a thing?
+fit.p.int <- procD.lm(coords ~ log(Csize) + origin + log(Csize)*origin, data = gdf,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.p.int)  #interaction effects not significant!
+
+#QUADRATIC
+Y.gpa <- gpa.p2.quad
+gdf <- geomorph.data.frame(Y.gpa, origin = df.pink2021.quad$origin)
+
+fit.p <- procD.lm(coords ~ log(Csize) + origin, data = gdf,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.p)  #says YES, significant difference between wild and hatch. Centroid size is less sig than original
+
+#are interaction effects a thing?
+fit.p.int <- procD.lm(coords ~ log(Csize) + origin + log(Csize)*origin, data = gdf,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.p.int)  #interaction effects not significant!
+
+#check resids or anything like that?
+
+
+
+#may 05/03/22
+##the original, without the date
+Y.gpa <- gpa.p2.orig
+gdf <- geomorph.data.frame(Y.gpa, origin = df.pink2021.orig$origin)
+
+fit.p <- procD.lm(coords ~ log(Csize) + origin, data = gdf,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.p)  
+
+#add date. Is date sig? 
+##match up date in here!
+##add date just like we add origin!!
+##date:
+#use dplyr magic to combine date from dataframe:
+#######
+#With
+#dataframe: 
+#df.pink2021.orig
+
+#what dataframe is needed for this combination??
+p_2_old <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Morpho_Code_040522/Data/Male.p2.Rdata.2_alt_ID.csv") #not working...why?
+names(p_2_old)
+p_2_old$ID
+df.pink2021.orig$ID
+##sigh. They're not identical. I'll need to data wrangle - 05/03/22
+df_pink2021_orig_05 <- left_join(df.pink2021.orig, p_2_old, by="ID")
+names(df_pink2021_orig_05)
+df_pink2021_orig_05$Date
+
+
+#05/27/22: I'll make a Jdate adjustment, it will make things work betteer
+library(lubridate)
+names(df_pink2021_orig_05)
+Dates_toJ <- mdy(df_pink2021_orig_05$Date)
+Julian_morph <- julian(Dates_toJ, origin=as.Date("2021-01-01"))
+class(Julian_morph)
+str(Julian_morph)
+df_pink2021_orig_05$Julian <- as.vector(Julian_morph)
+
+
+Y.gpa <- gpa.p2.orig
+gdf <- geomorph.data.frame(Y.gpa, origin = df_pink2021_orig_05$origin, date=df_pink2021_orig_05$Julian )
+gdf_Julian <- gdf
+df_p2_reversed_Julian <- as.data.frame(gdf$coords, gdf$origin, gdf$date, gdf$Csize)
+names(gdf)
+
+fit.p_04 <- procD.lm(coords ~ log(Csize) + origin, data = gdf,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.p_04) 
+
+fit.p_05 <- procD.lm(coords ~ log(Csize) + origin + date, data = gdf,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+
+fit.p_06 <- procD.lm(coords ~ log(Csize) + date + origin, data = gdf,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+
+fit.p_07 <- procD.lm(coords ~ log(Csize) +origin+ date, data = gdf,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+
+fit.p_08 <- procD.lm(coords ~ log(Csize) * date * origin, data = gdf,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE) #no interactions
+
+#in the case of date not sig, we go back to original
+
+
+summary(fit.p_04)#this one if date is not sig 
+summary(fit.p_05)
+summary(fit.p_06) #this one? #I think this one... #with origin last...?
+summary(fit.p_07)
+summary(fit.p_08)
+
+#date is significant predictor of shape, until I tested J-date, now its not.
+
+
+#gotta graph to figure out date relationship on coords
+
+#AIC(fit.p_04)
+#AIC(fit.p_05)
+anova(fit.p_04, fit.p_05) #fit 5 is better than 4. Keep the mod with date. Graph shape vs. date? How?
+names(fit.p_05)
+fit.p_05$aov.table
+
+
+  
+
+
+```
+
+
+#sep out wild hatch
+
+
+######################
+##OTHER morpho analyses
+
+Where's my OG pink 2021 morpho data?
+THESIS TIME!/Field Data Year 2/FISH
+```{r}
+p2.males <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Fish/Male.p2.Rdata.2.csv")
+```
+
+
+Graph that
+```{r}
+#use graphs you already made, dummy!
+#fuck, can't find them
+names(p2.males)
+hist(p2.males$Body.depth.mm.)
+hist(p2.males$Snout.length.mm.)
+hist(p2.males$Length.mm.)
+ggplot(p2.males) + aes(x=Length.mm., y=Body.depth.mm.) + geom_point() 
+ggplot(p2.males) + aes(x=Length.mm., y=Snout.length.mm.) + geom_point()
+
+#additions: 05/03/22
+library(ggpubr)
+ggqqplot(p2.males$Snout.length.mm.)
+ggqqplot(log(p2.males$Snout.length.mm.))
+
+ggqqplot(p2.males$Body.depth.mm.)
+ggqqplot(log(p2.males$Body.depth.mm.)) #log that!1
+
+ggqqplot(p2.males$Length.mm.)
+```
+Better graphs
+```{r}
+library(cowplot)
+
+p2.males1 <- p2.males %>% filter(Otolith.reading!= "Overground")
+
+ggplot(p2.males1) + aes(x=Length.mm., y=Body.depth.mm., color=Otolith.reading) + geom_point(size=3) +  scale_color_manual(values=c("blue","orange")) + theme_cowplot()+
+  guides(color= "none")+
+  geom_smooth(method = "lm")
+  #theme(text=element_text(family="Times New Roman"))+
+  #guides(color= "none")#+
+  #labs()
+  #theme(legend.position = c(0.03, 0.92))+theme(legend.title = element_blank(), legend.box.background = element_rect(colour = "black", fill="white", linetype="solid"))+
+
+
+
+
+
+ggplot(p2.males1) + aes(x=Length.mm., y=Snout.length.mm., color=Otolith.reading) + geom_point(size = 3) +
+  scale_color_manual(values=c("blue","orange")) + theme_cowplot()+
+  guides(color= "none") +
+  geom_smooth(method = "lm")
+#theme(text=element_text(family="Times New Roman"))+
+
+#looks like WILD > HATCHERY, hypothesis supported. Now let's test the hypothesis
+
+
+#05/06/22:
+#logging them graphs
+#logged p2 snout
+ggplot(p2.males1) + aes(x=Length.mm., y=log(Snout.length.mm.), color=Otolith.reading) + geom_point(size = 3) +
+  scale_color_manual(values=c("blue","orange")) + theme_cowplot()+
+  guides(color= "none") +
+  geom_smooth(method = "lm") +
+  labs(x= "MEHP length (mm)", y= "log(Snout (mm))")
+
+#logged p2 depth
+ggplot(p2.males1) + aes(x=Length.mm., y=log(Body.depth.mm.), color=Otolith.reading) + geom_point(size=3) +  scale_color_manual(values=c("blue","orange")) + theme_cowplot()+
+  guides(color= "none")+
+  geom_smooth(method = "lm") +
+  labs(x= "MEHP length (mm)", y= "log(Depth (mm))")
+
+#NEED TO FIX THE DAMN AXES AND IM NOT DOING IT RIGHT NOW!
+
+#05/26/22
+##moving the graphs over to work on them more: to simply graphing
+
+#08/16/22 explore
+#logged p2 depth and logged length
+ggplot(p2.males1) + aes(x=log(Length.mm.), y=log(Body.depth.mm.), color=Otolith.reading) + geom_point(size=3) +  scale_color_manual(values=c("blue","orange")) + theme_cowplot()+
+  guides(color= "none")+
+  geom_smooth(method = "lm") +
+  labs(x= "MEHP length (mm)", y= "log(Depth (mm))")
+##MORE COMPLICATED BUT NOT WORTH IT.
+```
+which were strays (for building the csv)
+```{r}
+library(dplyr)
+strays <- p2.males1 %>% filter(Location != "Armstrong")
+strays <- strays %>% filter(Otolith.reading == "PORT ARMSTRONG")
+#identifies the male strats
+```
+
+
+Hypothesis test- updated 05/04/22
+```{r}
+mod.p2021.depth <- lm(Body.depth.mm. ~ Length.mm. + Otolith.reading,data=p2.males1)
+mod.p2021.depth_log <- lm(log(Body.depth.mm.) ~ Length.mm. + Otolith.reading,data=p2.males1)
+names(p2.males1)
+
+
+
+ggplot(p2.males1) + aes(x=Date, y=Body.depth.mm.) + geom_boxplot() + geom_jitter(aes(color=Otolith.reading, shape=Location))
+ggplot(p2.males1) + aes(x=Date, y=Snout.length.mm.) + geom_boxplot() + geom_jitter(aes(color=Otolith.reading, shape=Location))
+
+
+mod.p2021.snout <- lm(Snout.length.mm. ~ Length.mm. + Otolith.reading,data=p2.males1)
+mod.p2021.snout_log <- lm(log(Snout.length.mm.) ~ Length.mm. + Otolith.reading,data=p2.males1)
+
+summary(mod.p2021.depth_log) #the important part for analysis
+summary(mod.p2021.snout_log)
+
+#finding them means 05/09/22
+w<-p2.males1 %>% filter(Otolith.reading=="No Mark") 
+mean(w$Body.depth.mm.) #mean of w male depth for p2
+
+h<-p2.males1 %>% filter(Otolith.reading=="PORT ARMSTRONG") 
+mean(h$Body.depth.mm.) #mean of h male depth for p2
+
+sd(w$Body.depth.mm.) #sd's, for my table
+sd(h$Body.depth.mm.)
+ 
+mean(w$Snout.length.mm.) #mean of w snout for p2
+
+mean(h$Snout.length.mm.)  #mean of hatch snout for p2
+
+sd(w$Snout.length.mm.)#standard deviations, for my table, for snout lenght
+sd(h$Snout.length.mm.)
+
+notresults1 <- t.test(log(h$Snout.length.mm.), log(w$Snout.length.mm.))
+notresults2 <- t.test(h$Snout.length.mm., w$Snout.length.mm., alternative = "less")
+notresutls3 <- t.test(h$Body.depth.mm., w$Body.depth.mm., alternative = "less")
+notresults4 <- t.test(h$Body.depth.mm., w$Body.depth.mm.)
+
+#write.csv(p2.males1, "p2.males1.csv")
+#idea: reclassify dates?
+##as early, medium, late dates?
+#p2_male_date_adj <- p2.males1 %>% 
+ # mutate(
+#  Date_recat = if(Date== "8/25/21"|| "8/27/21"||"8/31/21"){
+ #   Date_recat = "early"
+#  } else {
+ #   if(Date== "9/1/21"|| "9/3/21"){
+  #    Date_recat = "middle"
+   # } else {
+    #  if(Date== "9/9/21"|| "9/10/21"|| "9/13/21" ){
+     #   Date_recat = "late"
+    #  }
+    #}
+  #}
+#)
+
+
+#FUCK. Going to have to make another csv for this...
+#lets do this later
+
+#not working
+#i<-1
+#Date_recat <- numeric(0)
+#p2_male_date_adj_2 <- for (i in 1:length(p2.males1$Date)){
+ # Date_recat[i] = if(p2.males1$Date[i]== "8/25/21"|| "8/27/21"||"8/31/21"){
+#    Date_recat = "early"
+ # } else {
+  #  if(p2.males1$Date[i]== "9/1/21"|| "9/3/21"){
+   #   Date_recat[i] = "middle"
+  #  } else {
+   #   if(p2.males1$Date[i]== "9/9/21"|| "9/10/21"|| "9/13/21" ){
+    #    Date_recat[i] = "late"
+     # }
+#    }
+ # }
+#}
+
+#View(p2_male_date_adj)
+
+#ok, fixed the date bullshit
+p2.males_dateadj<- read.csv("p2.males2_dateadj.csv")
+
+#GRAPHS WITH DATE
+ggplot(p2.males_dateadj) + aes(x=Date_adj, y=Body.depth.mm.) + geom_boxplot() + geom_jitter(aes(color=Otolith.reading, shape=Location))
+ggplot(p2.males_dateadj) + aes(x=Date_adj, y=Snout.length.mm.) + geom_boxplot() + geom_jitter(aes(color=Otolith.reading, shape=Location))
+
+#MODELS WITH DATE
+Snout_global_pinkodd <- lm(log(Snout.length.mm.) ~ Length.mm. + Otolith.reading +  Location + Date_adj, data=p2.males_dateadj)
+summary(Snout_global_pinkodd)
+  
+  
+Depth_global_pinkodd <- lm(log(Body.depth.mm.) ~ Length.mm. + Otolith.reading +  Location + Date_adj, data=p2.males_dateadj)
+summary(Depth_global_pinkodd) #date not sig to this model, but lcoaiton is
+
+Depth_global_pinkodd_int <- lm(log(Body.depth.mm.) ~ Length.mm. + Otolith.reading +  Location + Date_adj + Length.mm.:Otolith.reading + Length.mm.:Location + Length.mm.:Date_adj + Otolith.reading:Location + Otolith.reading:Date_adj + Location:Date_adj + Length.mm.:Otolith.reading:Location, data=p2.males_dateadj)
+summary(Depth_global_pinkodd_int)
+
+########################3
+#Date edits 05/26/22
+##I'll use lubridate package to test for julian date as a continuous variable
+library(dplyr)
+library(lubridate)
+Julian_pinkodd <- julian(mdy(p2.males_dateadj$Date), origin=as.Date("2021-01-01") )
+Julian_pinkodd
+p2.males_dateadj$Julian <- Julian_pinkodd
+
+#nice. now test for Julian date:
+Snout_global_pinkodd_julian <- lm(log(Snout.length.mm.) ~ Length.mm. + Otolith.reading + Julian, data=p2.males_dateadj)
+summary(Snout_global_pinkodd_julian) #ok well, that's important. DAte IS signficant here, barely
+  
+Depth_global_pinkodd_julian <- lm(log(Body.depth.mm.) ~ Length.mm. + Otolith.reading + Julian, data=p2.males_dateadj)
+summary(Depth_global_pinkodd_julian) 
+
+Depth_global_pinkodd_julian_check <- lm(log(Body.depth.mm.) ~ Length.mm. + Julian + Otolith.reading, data=p2.males_dateadj)
+summary(Depth_global_pinkodd_julian_check)
+
+Depth_global_pinkodd_julian_global <- lm(log(Body.depth.mm.) ~ Length.mm. * Julian * Otolith.reading, data=p2.males_dateadj)
+summary(Depth_global_pinkodd_julian_global)
+
+names(p2.males_dateadj)
+#View(p2.males_dateadj)
+
+
+
+
+#how does difference in date look for snout and hump in pink 2021?
+#EXPLORATORY DATE PLOTS
+ggplot(p2.males_dateadj) + aes(x=Julian, y=Body.depth.mm.) +geom_point(aes(color=Location, shape=Otolith.reading)) +
+  geom_smooth()
+ggplot(p2.males_dateadj) + aes(x=Julian, y=Snout.length.mm.) +geom_point(aes(color=Location, shape=Otolith.reading)) +
+  geom_smooth()
+
+
+```
+
+
+05/26/22
+Finally testing things without the snakey fish in the pink 2021 dataset
+```{r}
+
+
+#not ripe fish remodved test
+length(p2.males_dateadj$Length.mm.) #98
+Ripe <- p2.males_dateadj %>% filter(Length.mm.>80)
+length(Ripe)
+#Lovers, Sashin as blocking variables? How to test that?
+#not ripe fish remodved test
+length(p2.males_dateadj$Length.mm.) #98
+Ripe <- p2.males_dateadj %>% filter(Body.depth.mm.>80)
+length(Ripe$Length.mm.)   #94. Perfect. 4 questionable fish removed
+
+Depth_global_pinkodd_julian_ripe <- lm(log(Body.depth.mm.) ~ Length.mm. + Otolith.reading + Julian, data=Ripe)
+summary(Depth_global_pinkodd_julian_ripe) #no snakey
+summary(Depth_global_pinkodd_julian) #yes snakey
+#same signficances, but more intesne without snakey fish
+
+
+```
+
+
+05/19/22: Length mean of pink 2021 (odd-year pink)
+Whats my dataframe??
+```{r}
+names(p2.males_dateadj)
+
+p2021_H <- p2.males_dateadj %>% filter(Otolith.reading=="PORT ARMSTRONG")
+p2021_W <-p2.males_dateadj %>% filter(Otolith.reading=="No Mark")
+
+mean(p2021_H$Length.mm.)
+mean(p2021_W$Length.mm.)
+
+
+#ok, let's do SD
+#pink 2021 sd
+sd(p2021_H$Length.mm.)
+sd(p2021_W$Length.mm.)
+
+#t-test of this
+t.test(p2021_H$Length.mm., p2021_W$Length.mm., alternative = "two.sided", var.equal = T)
+
+```
+
+
+02/11/22
+Test the lovers vs sashin issue on p2.
+-sahin had snagging (some), lovers did not.
+```{r}
+#wheres my dataframe?
+#hump
+names(p2.males1)
+ggplot(p2.males1) + aes(y=Body.depth.mm., x= Location, color=Otolith.reading) +
+  geom_boxplot() +geom_jitter()
+ggplot(p2.males1) + aes(y=Body.depth.mm., x= Location) +
+  geom_boxplot() +geom_jitter()  #oof, looks to be a difference here
+ggplot(p2.males1) +aes(y=Body.depth.mm., color= Location, x=Length.mm.) +geom_point() +geom_smooth(method = "lm")
+
+
+#snout
+ggplot(p2.males1) + aes(y=Snout.length.mm., x= Location, color=Otolith.reading) +
+  geom_boxplot() +geom_jitter()
+ggplot(p2.males1) + aes(y=Snout.length.mm., x= Location) +
+  geom_boxplot() +geom_jitter()  #oof, looks to be a difference here
+ggplot(p2.males1) +aes(y=Snout.length.mm., color= Location, x=Length.mm.) +geom_point() +geom_smooth(method = "lm")
+
+
+
+#formal test
+summary.lm(mod.p2021.depth)
+justwild.p2 <- p2.males1 %>% filter(Otolith.reading == "No Mark")
+mod.lov.depth <- aov(Body.depth.mm. ~ Length.mm. + Location, data=justwild.p2)
+summary.lm(mod.lov.depth)
+```
+
+
+
+
+
+Well, it looks like there was a bias in lovers cove sampling. OR fish are just bigger from lovers cove.
+
+
+
+05/27/22
+MORPHO DATE!! : fitp_04 is the way to go (Julian date (numeric) not sig...)
+geodata frame:gdf_Julian; Ygpa_Julian; df_p2_reversed_Julian ; df_pink2021_orig_05
+```{r}
+#LETS GRAPH IT ANYWAY! 
+library(viridis)
+#ggplot(df_pink2021_orig_05) + aes(x=Comp1, y=Comp3, color=Julian) +
+  #geom_point()+
+  #scale
+
+#need mean consensus shape per Julian date
+
+unique(gdf_Julian$date)
+coords_252 <- df_p2_reversed_Julian  %>% filter(date==252)
+coords_array <- gdf_Julian$coords
+coords_df <- as.data.frame(coords_array)
+
+#i<-1
+#sf_252=numeric()
+#for(i in 1:length(gdf_Julian$date)){
+ # if(gdf_Julian$date==252){
+  #  df_252[i]= 
+  #}
+  #i+1
+#}
+
+
+day_252 <- numeric()
+day_251 <- numeric()
+day_255 <- numeric()
+day_238 <- numeric()
+day_245 <- numeric()
+day_242 <- numeric()
+day_236 <- numeric()
+day_243 <- numeric()
+
+#Jdate_calc <- function(day_number, day_label){
+i=1
+for(i in 1:length(gdf_Julian$date)){
+  if(df_pink2021_orig_05$Julian[i]==252){
+    day_252 <- c(day_252, i)
+  }
+}
+#}
+
+i=1
+for(i in 1:length(gdf_Julian$date)){
+  if(df_pink2021_orig_05$Julian[i]==251){
+    day_251 <- c(day_251, i)
+  }
+}
+
+
+i=1
+for(i in 1:length(gdf_Julian$date)){
+  if(df_pink2021_orig_05$Julian[i]==255){
+    day_255 <- c(day_255, i)
+  }
+}
+
+i=1
+for(i in 1:length(gdf_Julian$date)){
+  if(df_pink2021_orig_05$Julian[i]==238){
+    day_238 <- c(day_238, i)
+  }
+}
+
+
+i=1
+for(i in 1:length(gdf_Julian$date)){
+  if(df_pink2021_orig_05$Julian[i]==245){
+    day_245 <- c(day_245, i)
+  }
+}
+
+i=1
+for(i in 1:length(gdf_Julian$date)){
+  if(df_pink2021_orig_05$Julian[i]==242){
+    day_242 <- c(day_242, i)
+  }
+}
+
+
+i=1
+for(i in 1:length(gdf_Julian$date)){
+  if(df_pink2021_orig_05$Julian[i]==236){
+    day_236 <- c(day_236, i)
+  }
+}
+
+i=1
+for(i in 1:length(gdf_Julian$date)){
+  if(df_pink2021_orig_05$Julian[i]==243){
+    day_243 <- c(day_243, i)
+  }
+}
+
+
+ref_252 <-mshape(gdf_Julian$coords[,,day_252])
+ref_251 <-mshape(gdf_Julian$coords[,,day_251])
+ref_255 <-mshape(gdf_Julian$coords[,,day_255])
+ref_238 <-mshape(gdf_Julian$coords[,,day_238])
+ref_245 <-mshape(gdf_Julian$coords[,,day_245])
+ref_242 <-mshape(gdf_Julian$coords[,,day_242])
+ref_236 <-mshape(gdf_Julian$coords[,,day_236])
+ref_243 <-mshape(gdf_Julian$coords[,,day_243])
+
+#class(ref_243)
+#data.frame(ref_243)
+
+df_252 <-data.frame(ref_252)
+df_251 <-data.frame(ref_251)
+df_255 <-data.frame(ref_255)
+df_238 <-data.frame(ref_238)
+df_245 <-data.frame(ref_245)
+df_242 <-data.frame(ref_242)
+df_236 <-data.frame(ref_236)
+df_243 <-data.frame(ref_243)
+
+
+pallete <- scale_color_grey()
+ggplot() + aes() + geom_point(data=df_236,aes(x=X, y=Y)) +
+  geom_point(data=df_238,aes(x=X, y=Y), color=grey12.5)+
+  geom_point(data=df_242,aes(x=X, y=Y), color=grey15) +
+  geom_point(data=df_243,aes(x=X, y=Y)) +
+  geom_point(data=df_245,aes(x=X, y=Y))+
+  geom_point(data=df_251,aes(x=X, y=Y))+
+  geom_point(data=df_252,aes(x=X, y=Y))+
+  geom_point(data=df_255,aes(x=X, y=Y))
+#BELOW NEEDS EDIT, use for example
+
+#canprobs combine into one df, with date
+df_252$Jday <-252
+df_251$Jday  <-251
+df_255$Jday  <-255
+df_238$Jday  <-238
+df_245$Jday  <-245
+df_242$Jday  <-242
+df_236$Jday  <-236
+df_243$Jday  <-243
+
+#NOW COMBINE THE DATAFRAMES.. STACK THEM!!
+?rbind
+?bind_rows
+?rbind.fill
+?vec_is_list
+df_Jdate_master <-bind_rows(tibble(X=df_236$X, Y=df_236$Y, Jday=df_236$Jday), 
+                            tibble(X=df_238$X, Y=df_238$Y, Jday=df_238$Jday), 
+                            tibble(X=df_242$X, Y=df_242$Y, Jday=df_242$Jday), 
+                            tibble(X=df_243$X, Y=df_243$Y, Jday=df_243$Jday),
+                            tibble(X=df_245$X, Y=df_245$Y, Jday=df_245$Jday),
+                            tibble(X=df_251$X, Y=df_251$Y, Jday=df_251$Jday),
+                            tibble(X=df_252$X, Y=df_252$Y, Jday=df_252$Jday), 
+                            tibble(X=df_255$X, Y=df_255$Y, Jday=df_255$Jday)
+                            )
+#nice!
+
+#NOW plot
+library(viridis)
+ggplot(df_Jdate_master) + aes(x=X, y=Y, color=as.factor(Jday)) +
+  geom_point()+
+  scale_color_viridis_d() +
+  theme_void()
+
+ggplot(df_Jdate_master) + aes(x=X, y=Y, color=as.factor(Jday)) +
+  geom_point()+
+  scale_color_grey()+
+  theme_void()
+
+
+#ggsave
+dev.new (width = 9, height = 3, unit = "in", noRStudioGD = T); last_plot()
+#ggsave ("Morpho_date_grey_draft.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
+
+
+#BELOW NEEDS EDIT, use for example
+#wild to hatch, hatch to wild examine
+#plotRefToTarget(ref.w.p2, ref.h.p2, method="vector", mag=5) #what is happening here? is wild plotted to hatch or hatch plotted to wild?
+#plotRefToTarget(ref.h.p2, ref.w.p2, method="vector", mag=5) #hatchery dots, wild arrows
+
+
+```
+
+
+
+
+No snaky fish tests 06/02/22
+```{r}
+p2.males1
+ggplot(p2.males1) + aes(y=Body.depth.mm., x=Length.mm.) + geom_point()
+p2.males1_nosnakes <- p2.males1 %>% filter(Body.depth.mm.>80)
+
+snakes <- p2.males1 %>% filter(Body.depth.mm.<80)
+snakes$ID
+#doen't look to be too much of a linear difference
+
+#remove 8 and 9, the "snaeky" ones, and see whats up.
+#QC 27 and 27, make sure those values are correct
+
+#morpho
+p2.lands[,,60]
+p2.lands[,,21]
+
+
+p2.lands.nosnakes<- p2.lands[,,c(-21,-60)]
+dim(p2.lands.nosnakes) #good
+gpa_nosnakes <- gpagen(p2.lands.nosnakes, curves=pinkcurves) #fuck, it needs sliders
+plot(gpa_nosnakes) #looks no diff from orignal
+plot(gpa.p2.orig) #original
+dim(p2.lands)
+
+
+pca_nosnakes <- gm.prcomp(gpa_nosnakes$coords)
+  
+plot(pca_nosnakes)
+plot(pca.p2.orig)
+
+
+#separate RW's for ggplot
+df_nosnakes <- as.data.frame(pca_nosnakes$x[,1:3])
+
+wild.or.hatch_nosnakes <- wild.or.hatch[-c(21,60),]
+
+df_nosnakes$origin <- wild.or.hatch_nosnakes$Oto
+df_nosnakes$ID <- wild.or.hatch_nosnakes$Fish.ID
+
+
+ggplot(df_nosnakes) + aes(x=Comp3, y=Comp1, color=origin) + geom_point() + stat_ellipse()
+#looks really similar to with snakes
+
+```
+
+
+
+
+Revisit 07/22/22
+```{r}
+summary(mod.p2021.depth_log) #the important part for analysis
+summary(mod.p2021.snout_log)
+
+summary(Snout_global_pinkodd_julian)
+summary(Depth_global_pinkodd_julian)
+```
+
+

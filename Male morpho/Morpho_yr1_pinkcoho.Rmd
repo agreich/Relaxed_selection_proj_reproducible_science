@@ -1,0 +1,1621 @@
+---
+title: "Morphcontinued"
+author: "Alex"
+date: "10/12/2021"
+output: html_document
+root.dir : "/Users/alexandrareich/Desktop/MORPHO IN ACTION/WORKDIR"
+---
+
+
+First, load the packages
+
+```{r}
+library(ggplot2)
+library(geomorph)
+library(shapes)
+library(MASS)
+library(ape)
+library(vegan)
+library(rgl)
+library(scatterplot3d)
+library(ggfortify)
+library(dplyr)
+library(reshape2)
+library(reshape)
+library(tidyr)
+library(ggforce)
+library(Morpho)
+library(RColorBrewer)
+
+
+```
+
+
+
+Next, load your tps file
+```{r}
+specID <- c("HM3", "HM19", "WM7", "HM13", "WM5", "HM29", "HM11", "WM15", "HM14", "WM16", 
+            "HM30", "HM7", "WM25", "HM2", "HM22", "HM8", "HM16", "WM19", "WM28", "WM23",
+            "WM9", "HM18", "WM29", "HM25", "HM1", "WM14", "WM2", "HM12", "WM6",
+            "WM13", "WM18", "HM9", "WM10", "WM1", "HM27", "WM22", "HM20", "WM30", "HM5",
+            "HM21", "HM24", "WM21", "HM17", "WM26", "HM4", "WM11", "WM3", "HM28", "WM24",
+            "HM23", "HM6", "WM20", "WM8", "WM27", "HM26", "WM4", "HM10", "WM17", "HM15", "WM12")
+#specID is the Id.
+#QC comments: this looks good
+
+pinkdat.lands <- readland.tps("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/pinks3.tps", readcurves=TRUE)
+```
+
+
+
+REmove outlier
+```{r}
+pinkdat.landsno56 <- pinkdat.lands
+pinkdat.landsno56 <- pinkdat.landsno56[,,-55]
+#pinkdat.landsnoHM26 <- pinkdat.lands[,,-56]
+dim(pinkdat.landsno56)
+
+plotAllSpecimens(pinkdat.lands)
+plotAllSpecimens(pinkdat.landsno56)
+#plotAllSpecimens(pinkdat.landsnoHM26)
+
+
+```
+What about sliding semi-landmarks? ADDED THIS IN THIS VERSION
+```{r}
+#pinks
+#define.sliders(pinkdat.landsno56[,,1], nsliders=3)
+#needs to be done not in a chuk
+
+#coho
+#define.sliders(coho_lands.no_ad[,,1], nsliders=3)
+
+#for just the long coho, see below
+```
+
+
+Now transform into Procrustes shape space
+```{r}
+pinkcurves <- as.matrix(read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/curveslide.csv", header=T))
+gpa.no56 <- gpagen(pinkdat.landsno56, curves = pinkcurves)
+plot(gpa.no56)
+
+gpa_withoutlier <-  gpagen(pinkdat.lands, curves = pinkcurves)
+
+
+plot(gpa_withoutlier)
+
+
+```
+
+Now run a PCA
+```{r}
+pca.no56 <- gm.prcomp(gpa.no56$coords)
+plot(pca.no56)
+#how to add categorical variables though?
+#wait, I did that.
+
+pca_withoutlier <- gm.prcomp(gpa_withoutlier$coords)
+
+plot(pca_withoutlier)
+```
+
+convert to dataframe
+```{r}
+summary(pca.no56)
+#convert array to dataframe
+#do I need to convert to dataframe?
+df.pink2 <- as.data.frame(pca.no56$x[,1:3])
+class(df.pink2) 
+
+#ok, need to add river column based on origin
+#probaly an easier way to do this, but:
+#trying to make a vector of length 180 first...
+#or make smaller vectors that fit the river, and then combine, and then add to dataframe
+
+#create wild/hatch vector based on specID
+Wild.or.hatch2 <- c("H", "H", "W", "H", "W", "H", "H", "W", "H", "W", 
+            "H", "H", "W", "H", "H", "H", "H", "W", "W", "W",
+            "W", "H","W", "H", "H", "W", "W", "H", "W",
+            "W", "W", "H", "W", "W", "H", "W", "H", "W", "H",
+            "H", "H", "W", "H", "W", "H", "W", "W", "H", "W",
+            "H", "H", "W", "W", "W", "W", "H", "W", "H", "W")
+
+#and add SpecID into there somewhere?
+specID2 <- specID[-55]
+
+head(df.pink2)
+df.pink2$Wild.or.hatch <- Wild.or.hatch2
+df.pink2$ID <- specID2 #GO BACK AND LOOK AT FISH PHOTOTS
+head(df.pink2)
+
+
+
+```
+
+
+```{r}
+library(cowplot)
+wildhatch <- c("orange", "blue")
+
+(plotp<-ggplot(data=df.pink2)+aes(x=Comp1, y=Comp2, color=Wild.or.hatch)+geom_point()+scale_color_manual(values=wildhatch)+
+  stat_ellipse() + theme_cowplot())
+
+#10/12/21 edit, tinkering with graph
+
+ggplot(data=df.pink2)+aes(x=Comp3, y=Comp1, color=Wild.or.hatch)+geom_point()+scale_color_manual(values=wildhatch) + stat_ellipse() + theme_bw() + labs(x= "RW 3 (hump)", y= "RW 1 (hump and snout)")
+```
+
+
+OK, NOW fix this by placing wild or hatch category within the Procrustes array
+My long term goal: get groups... gpagen groups?
+To color code wild/hatch
+```{r}
+summary(gpa.no56)
+summary(pinkdat.landsno56)
+```
+
+
+So... not sure how that works
+Trying analyiss: EXPERIMENTAL AND COPIED FROM THE INTERNET
+```{r}
+Y.gpa <- gpa.no56
+gdf <- geomorph.data.frame(Y.gpa, origin = Wild.or.hatch2)
+
+fit.p <- procD.lm(coords ~ log(Csize) + origin, data = gdf,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.p)
+#origin is not sig to model, kinda borderline
+
+
+#int effects
+fit.p.int <- procD.lm(coords ~ log(Csize) + origin + log(Csize)*origin, data = gdf,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.p.int) #interaction effects not present
+
+
+
+#plot stuff, example based
+### Extracting objects and plotting options
+# diagnostic plots
+plot(fit.p, type = "diagnostics") 
+# diagnostic plots, including plotOutliers
+plot(fit.p, type = "diagnostics", outliers = TRUE) 
+# PC plot rotated to major axis of fitted values
+plot(fit.p, type = "PC", pch = 19, col = "blue") 
+# Regression-type plots
+# Use fitted values from the model to make prediction lines
+plot(fit.p, type = "regression", 
+predictor = gdf$Csize, reg.type = "RegScore", 
+pch = 19, col = "green")
+
+## Uses coefficients from the model to find the projected regression 
+# scores
+rat.plot <- plot(fit.p, type = "regression", 
+predictor = gdf$Csize, reg.type = "RegScore", 
+pch = 21, bg = "yellow") 
+
+# TPS grids for min and max scores in previous plot
+preds <- shape.predictor(fit.p$GM$fitted, x = rat.plot$RegScore, 
+                        predmin = min(rat.plot$RegScore), 
+                        predmax = max(rat.plot$RegScore))
+
+M <-gpa.no56$consensus
+plotRefToTarget(M, preds$predmin, mag=2)
+plotRefToTarget(M, preds$predmax, mag=2) #THIS IS REALLY COOL!
+                        
+attributes(fit.p)
+fit.p$fitted[1:3, ] # the fitted values (first three specimens)
+fit.p$GM$fitted[,, 1:3] # the fitted values as Procrustes 
+# coordinates (same specimens)
+
+```
+
+I don't know what the hell happened in the last chunk. Doing analysis again:
+```{r}
+Y.gpa <- gpa.no56
+gdf <- geomorph.data.frame(Y.gpa, origin = Wild.or.hatch2)
+
+fit.p <- procD.lm(coords ~ log(Csize) + origin, data = gdf,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.p)  #NOT SIGNIFICANT...well origin is not sig, but csize is...
+
+#are interaction effects a thing?
+fit.p.int <- procD.lm(coords ~ log(Csize) + origin + log(Csize)*origin, data = gdf,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.p.int)  #NOT SIGNIFICANT, and interaction effects are not significant
+
+#ok. got the fit . now what? test it? plot it?...I think that's it. Maybe just plot the relative warps too.
+
+#log of csize is significant, but not origin categorical variabble
+#A MANCOVA
+
+```
+
+
+More plots for pinks
+```{r}
+plotp
+
+#plotReftoTarget
+#pinks are in Y.gpa
+ref <- mshape(Y.gpa$coords)
+w.p <- numeric()
+h.p <- numeric()
+i=1
+
+for (i in 1:length(Wild.or.hatch2)){
+  if(Wild.or.hatch2[i]=="W"){
+    w.p <- c(w.p, i)
+  }else{
+    h.p <- c(h.p, i)
+  }
+}
+
+ref.w.p <-mshape(Y.gpa$coords[,,w.p]) #wild mean
+ref.h.p <-mshape(Y.gpa$coords[,,h.p]) #hatchery mean
+
+#wild to hatch, hatch to wild examine
+plotRefToTarget(ref.w.p, ref.h.p, method="vector", mag=5)
+plotRefToTarget(ref.h.p, ref.w.p, method="vector", mag=5)
+
+
+#?mshape()
+#plotRefToTarget()
+
+#pca plot ref to target
+ref <- mshape(gpa.no56$coords)
+ref_p1 <- mshape(gpa.no56$coords)
+
+plotRefToTarget(pca.no56$shapes$shapes.comp1$min, ref, method="TPS")
+plotRefToTarget(pca.no56$shapes$shapes.comp1$max, ref, method="TPS")
+
+plotRefToTarget(pca.no56$shapes$shapes.comp2$min, ref, method="TPS")
+plotRefToTarget(pca.no56$shapes$shapes.comp2$max, ref, method="TPS")
+
+
+plotRefToTarget(pca.no56$shapes$shapes.comp1$min, ref, method="vector")
+plotRefToTarget(pca.no56$shapes$shapes.comp1$max, ref, method="vector")
+
+plotRefToTarget(pca.no56$shapes$shapes.comp2$min, ref, method="vector")
+plotRefToTarget(pca.no56$shapes$shapes.comp2$max, ref, method="vector")
+
+plotRefToTarget(pca.no56$shapes$shapes.comp3$min, ref, method="vector")
+plotRefToTarget(pca.no56$shapes$shapes.comp3$max, ref, method="vector") 
+#THIS IS IT! COMP 3 is the hump!!!
+
+plotRefToTarget(pca.no56$shapes$shapes.comp4$min, ref, method="vector")
+plotRefToTarget(pca.no56$shapes$shapes.comp4$max, ref, method="vector") 
+
+#can you also plot the ID of the important PCs???
+pvar <- (pca.no56$sdev^2)/(sum(pca.no56$sdev^2))
+names(pvar) <- seq(1:length(pvar))
+barplot(pvar, xlab= "Principal Components", ylab = "% Variance")
+
+#also plot the CVA, please
+vari <- gpa.no56$coords
+facto <- Wild.or.hatch2
+
+CVA.pink <- CVA(vari, groups=facto)
+
+```
+
+
+COHO TIME
+
+```{r}
+#load in coho data
+coho_lands <- readland.tps("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Coho091021_rand_fixed062221.tps", readcurves=TRUE)
+
+coho_lands<-coho_lands[c(-5,-6),,]
+#the photo names should tell you the ID, probably need to go make a vector of the coho ID's tho
+
+#need to reorder my length vector to match the coho ID
+#or reorder my coho ID to match the length vector....
+the_order <- c(45,43,41, 49, 3, 16, 44, 13, 54, 47, 17, 55, 18, 21, 34, 57, 39, 2, 4, 53, 24, 28, 22, 31, 35, 15, 60,
+                  52, 56, 37, 33, 51, 20, 19, 29, 42, 27, 48, 30, 7, 26, 40, 59, 25, 11, 12, 14, 8, 38, 36, 32, 46, 5, 50,
+                  23, 9, 58, 1, 6, 10)
+#WHAT IS length_c....
+#######3
+#Coho length/depth stuff
+coho.dat <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/MASTERMaleCohoQC copy.csv")
+names(coho.dat)
+length_c <- coho.dat$Length..mm.
+
+########3
+
+
+length_ordered <- c(602,583,length_c[41], length_c[49], length_c[3], length_c[16], length_c[44], length_c[13], length_c[54], length_c[47], length_c[17], length_c[55], length_c[18], length_c[21], length_c[34], length_c[57], length_c[39], length_c[2], length_c[4], length_c[53], length_c[24], length_c[28], length_c[22], length_c[31], length_c[35], length_c[15], length_c[60],
+                    length_c[52], length_c[56], length_c[37], length_c[33], length_c[51], length_c[20], length_c[19], length_c[29], length_c[42], length_c[27], length_c[48], length_c[30], length_c[7], length_c[26], length_c[40], length_c[59], length_c[25], length_c[11], length_c[12], length_c[14], length_c[8], length_c[38], length_c[36], length_c[32], length_c[46], length_c[5], length_c[50],
+                    length_c[23], length_c[9], length_c[58], length_c[1], length_c[6], length_c[10])
+
+l.c <- numeric()
+i=1
+for (i in 1:length(length_ordered)){
+  if (length_ordered[i] > 525){
+    l.c <- c(l.c,i)
+  }
+}
+
+Wild.or.hatch.d <- c("H","H", "H", "H", "W", "W", "H", "W", "H", "H", #47
+                     "W", "H", "W", "W", "H", "H", "H", "W", "W", "H",#53
+                     "W", "W", "W", "H", "H", "W", "H", "H", "H", "H", #37
+                     "H", "H", "W", "W", "W", "H", "W", "H", "W", "W", "W", #26
+                     "H", "H", "W", "W", "W", "W", "W", "H", "H", "H", #32
+                     "H", "W", "H", "W", "W", "H", "W", "W", "W")
+
+
+```
+
+Can I separate out the long fishies?
+What was the length cutoff that I used? 525mm
+
+```{r}
+#length_ordered
+```
+
+
+Plot all speciments
+```{r}
+Wild.or.hatch.long<- Wild.or.hatch.d[l.c]
+coho_lands_long <- coho_lands[,,l.c]
+plotAllSpecimens(coho_lands)
+plotAllSpecimens(coho_lands_long)
+
+```
+
+Add in the SEMILANDMARKS (special to this iteration of data)
+```{r}
+#should be the same as the otehr matrix, so not adding anything new here
+```
+
+
+Procrustes shape space tranformation
+```{r}
+gpa_coho <- gpagen(coho_lands, curves=pinkcurves) #should be the same matrix as pinkcurves, nothing special here. but be careful
+#plotAllSpecimens(coho_lands)
+plot(gpa_coho)
+
+gpa_coho_long <- gpagen(coho_lands_long, curves=pinkcurves)
+#plotAllSpecimens(coho_lands_long)
+plot(gpa_coho_long)
+
+```
+
+PCA/REl warps
+```{r}
+#run a PCA
+pca_coho <- gm.prcomp(gpa_coho$coords)
+plot(pca_coho)
+#summary(pca_coho)
+#names(pca_coho)
+
+
+pca_coho_long <- gm.prcomp(gpa_coho_long$coords)
+plot(pca_coho_long)
+#summary(pca_coho_long)
+#names(pca_coho_long)
+
+#can you also plot the ID of the important PCs???
+pvar_cl <- (pca_coho_long$sdev^2)/(sum(pca_coho_long$sdev^2))
+names(pvar_cl) <- seq(1:length(pvar_cl))
+barplot(pvar_cl, xlab= "Principal Components", ylab = "% Variance")
+```
+
+PCA ggplot
+(Please figure out what stat_ellipse() does...)
+```{r}
+df.coho <- as.data.frame(pca_coho$x[,1:3])
+df.coho$Wild.or.hatch <- Wild.or.hatch.d 
+
+ggplot(df.coho) + aes(x=Comp1, y=Comp2, color=Wild.or.hatch) + geom_point()+
+  scale_color_brewer(palette="Set2")+
+  stat_ellipse()
+
+
+df.coho.long <- as.data.frame(pca_coho_long$x[,1:3])
+df.coho.long$Wild.or.hatch <- Wild.or.hatch.long
+
+ggplot(df.coho.long) + aes(x=Comp1, y=Comp2, color=Wild.or.hatch) + geom_point()+
+  scale_color_brewer(palette="Set2")+
+  stat_ellipse()
+
+ggplot(df.coho.long) + aes(x=Comp1, y=Comp3, color=Wild.or.hatch) + geom_point()+
+  scale_color_brewer(palette="Set2")+
+  stat_ellipse()
+
+######################################################################
+#need to do a RW1 vs RW 3 graph 10/12/21 for coho and coho long #SHIT
+mycolors.coho=c("orange", "blue")
+#coho long
+ggplot(df.coho.long) + aes(x=Comp3, y=Comp1, color=Wild.or.hatch) + geom_point(size=2)+ scale_color_manual(values=mycolors.coho) + stat_ellipse() + labs(y= "RW 1 (snout, roughly)", x= "RW 3 (depth, roughly)") + theme_bw()  #RW1 is roughtly hump.RW3depth is 
+
+#COHO all
+ggplot(df.coho) + aes(x=Comp3, y=Comp1, color=Wild.or.hatch) + geom_point(size=2)+ scale_color_manual(values=mycolors.coho) + stat_ellipse() + labs(y= "RW 1 (snout and hump, roughly)", x= "RW 3 (depth, roughly)") + theme_bw() 
+
+#pink
+
+
+
+```
+Coho models MANCOVA
+```{r}
+Y.gpa.c <- gpa_coho
+gdf.c <- geomorph.data.frame(Y.gpa.c, origin = Wild.or.hatch.d)
+
+fit.c <- procD.lm(coords ~ log(Csize) + origin, data = gdf.c,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.c)
+#sig, yes
+
+#INT EFFECTS CHECK!!
+fit.c.int <- procD.lm(coords ~ log(Csize) + origin + log(Csize)*origin, data = gdf.c,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.c.int) #ooh, some interaction effects. That's expected though
+
+
+Y.gpa.cl <- gpa_coho_long
+gdf.cl <- geomorph.data.frame(Y.gpa.cl, origin = Wild.or.hatch.long)
+
+fit.cl <- procD.lm(coords ~ log(Csize) + origin, data = gdf.cl,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.cl)
+#borderlien sig
+
+#CHECK Out INTERACTION EFFECTS FOR THIS
+fit.cl.int <- procD.lm(coords ~ log(Csize) + origin+ log(Csize)*origin, data = gdf.cl,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.cl.int) #ooh, there's interaction effects
+
+
+```
+
+
+More plots for coho
+```{r}
+
+#plotReftoTarget
+#pinks are in Y.gpa
+ref <- mshape(Y.gpa.c$coords)
+w.c <- numeric()
+h.c <- numeric()
+i=1
+
+for (i in 1:length(Wild.or.hatch.d)){
+  if(Wild.or.hatch.d[i]=="W"){
+    w.c <- c(w.c, i)
+  }else{
+    h.c <- c(h.c, i)
+  }
+}
+
+ref.w.c <-mshape(Y.gpa.c$coords[,,w.c]) #wild mean
+ref.h.c <-mshape(Y.gpa.c$coords[,,h.c]) #hatchery mean
+
+plotRefToTarget(ref.w.c, ref.h.c, method="vector", mag=5) #wild dots to hatchery arrows
+
+#?mshape()
+#plotRefToTarget()
+
+#pca plot ref to target
+
+plotRefToTarget(pca_coho$shapes$shapes.comp1$min, ref, method="TPS")
+plotRefToTarget(pca_coho$shapes$shapes.comp1$max, ref, method="TPS")
+
+plotRefToTarget(pca_coho$shapes$shapes.comp2$min, ref, method="TPS")
+plotRefToTarget(pca_coho$shapes$shapes.comp2$max, ref, method="TPS")
+
+
+plotRefToTarget(pca_coho$shapes$shapes.comp1$min, ref, method="vector")
+plotRefToTarget(pca_coho$shapes$shapes.comp1$max, ref, method="vector")
+
+plotRefToTarget(pca_coho$shapes$shapes.comp2$min, ref, method="vector")
+plotRefToTarget(pca_coho$shapes$shapes.comp2$max, ref, method="vector")
+
+plotRefToTarget(pca_coho$shapes$shapes.comp3$min, ref, method="vector")
+plotRefToTarget(pca_coho$shapes$shapes.comp3$max, ref, method="vector") 
+#THIS IS IT! COMP 3 is the hump!!!
+
+plotRefToTarget(pca_coho$shapes$shapes.comp4$min, ref, method="vector")
+plotRefToTarget(pca_coho$shapes$shapes.comp4$max, ref, method="vector") 
+#LOOKS LIKE THE DORSAL.....
+
+#can you also plot the ID of the important PCs???
+pvar <- (pca_coho$sdev^2)/(sum(pca_coho$sdev^2))
+names(pvar) <- seq(1:length(pvar))
+barplot(pvar, xlab= "Principal Components", ylab = "% Variance")
+
+#also plot the CVA, please
+vari <- gpa_coho$coords
+facto <- Wild.or.hatch.d
+
+CVA.pink <- CVA(vari, groups=facto)
+
+
+#10/12/21
+#RW1 vs. RW3 PCA graph
+
+
+```
+
+...And for coho long
+```{r}
+#plotReftoTarget
+#pinks are in Y.gpa
+ref <- mshape(Y.gpa.cl$coords)
+ref_cl <- mshape(Y.gpa.cl$coords)
+w.cl <- numeric()
+h.cl <- numeric()
+i=1
+
+for (i in 1:length(Wild.or.hatch.long)){
+  if(Wild.or.hatch.long[i]=="W"){
+    w.cl <- c(w.cl, i)
+  }else{
+    h.cl <- c(h.cl, i)
+  }
+}
+
+ref.w.cl <-mshape(Y.gpa.cl$coords[,,w.cl]) #wild mean
+ref.h.cl <-mshape(Y.gpa.cl$coords[,,h.cl]) #hatchery mean
+
+plotRefToTarget(ref.w.cl, ref.h.cl, method="vector", mag=5)  #THATS the means compared to each other
+plotRefToTarget(ref.h.cl, ref.w.cl, method="vector", mag=5)
+
+
+#pca plot ref to target
+
+plotRefToTarget(pca_coho_long$shapes$shapes.comp1$min, ref, method="TPS")
+plotRefToTarget(pca_coho_long$shapes$shapes.comp1$max, ref, method="TPS")
+
+plotRefToTarget(pca_coho_long$shapes$shapes.comp2$min, ref, method="TPS")
+plotRefToTarget(pca_coho_long$shapes$shapes.comp2$max, ref, method="TPS")
+
+
+plotRefToTarget(pca_coho_long$shapes$shapes.comp1$min, ref, method="vector")
+plotRefToTarget(pca_coho_long$shapes$shapes.comp1$max, ref, method="vector")
+
+plotRefToTarget(pca_coho_long$shapes$shapes.comp2$min, ref, method="vector")
+plotRefToTarget(pca_coho_long$shapes$shapes.comp2$max, ref, method="vector")
+
+plotRefToTarget(pca_coho_long$shapes$shapes.comp3$min, ref, method="vector")
+plotRefToTarget(pca_coho_long$shapes$shapes.comp3$max, ref, method="vector") 
+#THIS IS IT! COMP 3 is the hump!!!
+
+plotRefToTarget(pca_coho_long$shapes$shapes.comp4$min, ref, method="vector")
+plotRefToTarget(pca_coho_long$shapes$shapes.comp4$max, ref, method="vector") 
+
+#can you also plot the ID of the important PCs???
+pvar <- (pca_coho_long$sdev^2)/(sum(pca_coho_long$sdev^2))
+names(pvar) <- seq(1:length(pvar))
+barplot(pvar, xlab= "Principal Components", ylab = "% Variance")
+
+#also plot the CVA, please
+vari <- gpa_coho_long$coords
+facto <- Wild.or.hatch.long
+
+CVA.pink <- CVA(vari, groups=facto)
+```
+
+
+07/20/21
+SEMILANDMARKS ADJUSTMENTS
+Because I traced curves, I may need semilandmarks. I also may need to revise these traced curves in TPS DIG, so that I don't resample. This either requires going back and drawing curves, or more semilandmarks
+
+From the ?readlands.tps()
+- 'if readcurves = TRUE, the coord data for the curves will be returned ans semilandmarks and appended to the fixed landmark data. THE USER THEN NEEDS TO USE define.sliders TO CREATE A MATRIX DESIGNATING HOW THE CURVE POINTS WILL SLIDE' - so I need to do this
+
+
+```{r}
+?define.sliders
+#don't use surfsliders- that's only for 3D
+#define.sliders(coho_lands_long[,,1], nsliders=3)
+#holy shit it worked!!!
+#but do I need to do that for everything? 
+#how to apply the siders csv
+
+#now to on the coho without adipose and the pinks without 56!!!
+#and throw that matrix into analysis and see how it goes!!!
+
+```
+
+
+Post-siders coho long analysis
+```{r}
+curves.coho_long <- as.matrix(read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Morpho_Code_040522/curveslide_cl.csv", header=T))
+#that worked
+gpa_coho_long_slide <- gpagen(coho_lands_long, curves=curves.coho_long)
+#this uses bending energy to move the semilandmarks
+pca_coho_long_slide <- gm.prcomp(gpa_coho_long_slide$coords)
+
+#plot stuff
+plotAllSpecimens(gpa_coho_long_slide$coords)
+plot(pca_coho_long_slide)
+
+df.coho.long.slide <- as.data.frame(pca_coho_long_slide$x[,1:3])
+df.coho.long.slide$Wild.or.hatch <- Wild.or.hatch.long
+
+ggplot(df.coho.long.slide) + aes(x=Comp1, y=Comp2, color=Wild.or.hatch) + geom_point()+
+  scale_color_brewer(palette="Set2")+
+  stat_ellipse()
+ggplot(df.coho.long.slide) + aes(x=Comp1, y=Comp3, color=Wild.or.hatch) + geom_point()+
+  scale_color_brewer(palette="Set2")+
+  stat_ellipse()
+
+#model stuff
+Y.gpa.cl.slide <- gpa_coho_long_slide
+gdf.cl.slide <- geomorph.data.frame(Y.gpa.cl.slide, origin = Wild.or.hatch.long)
+
+fit.cl.slide <- procD.lm(coords ~ log(Csize) + origin, data = gdf.cl.slide,  #all coords taken into account
+iter = 9999, print.progress = FALSE, RRPP=TRUE)
+summary(fit.cl.slide)
+#yes, significant. 0.0384, for origin
+
+##plot more stuff
+#plotReftoTarget
+ref <- mshape(Y.gpa.cl.slide$coords)
+w.cl <- numeric()
+h.cl <- numeric()
+i=1
+
+for (i in 1:length(Wild.or.hatch.long)){
+  if(Wild.or.hatch.long[i]=="W"){
+    w.cl <- c(w.cl, i)
+  }else{
+    h.cl <- c(h.cl, i)
+  }
+}
+
+ref.w.cl <-mshape(Y.gpa.cl.slide$coords[,,w.cl]) #wild mean
+ref.h.cl <-mshape(Y.gpa.cl.slide$coords[,,h.cl]) #hatchery mean 
+
+#compare wild and hatch mean shapes to each other
+plotRefToTarget(ref.w.cl, ref.h.cl, method="vector", mag=5)
+plotRefToTarget(ref.h.cl, ref.w.cl, method="vector", mag=5)
+
+#compare wild and hatch mean shape to the reference mean shape
+plotRefToTarget(ref.w.cl, ref, method="vector", mag=5)
+plotRefToTarget(ref.h.cl, ref, method="vector", mag=5)
+
+
+#pca plot ref to target
+
+plotRefToTarget(pca_coho_long_slide$shapes$shapes.comp1$min, ref, method="TPS")
+plotRefToTarget(pca_coho_long_slide$shapes$shapes.comp1$max, ref, method="TPS")
+
+plotRefToTarget(pca_coho_long_slide$shapes$shapes.comp2$min, ref, method="TPS")
+plotRefToTarget(pca_coho_long_slide$shapes$shapes.comp2$max, ref, method="TPS")
+
+
+plotRefToTarget(pca_coho_long_slide$shapes$shapes.comp1$min, ref, method="vector")
+plotRefToTarget(pca_coho_long_slide$shapes$shapes.comp1$max, ref, method="vector")
+
+plotRefToTarget(pca_coho_long_slide$shapes$shapes.comp2$min, ref, method="vector")
+plotRefToTarget(pca_coho_long_slide$shapes$shapes.comp2$max, ref, method="vector")
+
+plotRefToTarget(pca_coho_long_slide$shapes$shapes.comp3$min, ref, method="vector", mag=5)
+plotRefToTarget(pca_coho_long_slide$shapes$shapes.comp3$max, ref, method="vector", mag=5) 
+#THIS IS IT! COMP 3 is the hump!!!
+
+plotRefToTarget(pca_coho_long_slide$shapes$shapes.comp4$min, ref, method="vector")
+plotRefToTarget(pca_coho_long_slide$shapes$shapes.comp4$max, ref, method="vector") 
+
+#can you also plot the ID of the important PCs???
+pvar <- (pca_coho_long_slide$sdev^2)/(sum(pca_coho_long_slide$sdev^2))
+names(pvar) <- seq(1:length(pvar))
+barplot(pvar, xlab= "Principal Components", ylab = "% Variance")
+
+#also plot the CVA, please
+vari <- gpa_coho_long_slide$coords
+facto <- Wild.or.hatch.long
+
+CVA.pink <- CVA(vari, groups=facto)
+```
+
+
+
+
+
+Lin analyis revision
+
+Length, depth linear analysis: (just copy over, touch up if needed, complete the analysis segments)
+
+Coho snout length: snouts are not longer for wild fish, hypothesis distprived
+```{r}
+#######snout length using geomorph
+#?interlmkdist
+#landmakrs of interest for the coho:
+#14 is the eye - #2 is end of snout
+#1 is bottom of snout -  #3 is above nare
+#interlmkdist(coho_lands) #using the un-tranformed data
+lmks <- data.frame(snoutL=c(2,14), snoutH=c(1,3))
+snoutlineardists <- interlmkdist(coho_lands, lmks)
+#snoutlineardists
+snout_df <- as.data.frame(snoutlineardists)
+df.coho$snoutL <- snout_df$snoutL
+df.coho$length <- length_ordered
+df.coho$ID <- the_order #cleaning up my dataframe
+
+#depth
+depth_coho_ord <- numeric(60)
+depth_c <- coho.dat$Body.Depth.mm.
+
+for (i in (1:length(the_order))){
+  depth_coho_ord[i] <- depth_c[the_order[i]]
+}
+
+df.coho$depth <- depth_coho_ord
+
+
+
+df.coho.long2 <- df.coho %>% filter (length > 525)
+df.coho.long2 <- df.coho.long2[c(-1,-2)]
+
+#NOW linear regression on that... how to do again?
+#snout_df$Wild.or.hatch <- Wild.or.hatch.long #woohoo, right #'s, no doubles
+#need snout height and snout length as covariates, wild or hatch as a factor
+#or, just use snout lenght and wild or hatch, one sided t-test
+
+#first separate wild and hatchery
+wild_S <-  df.coho.long2 %>% filter(Wild.or.hatch=="W")
+hatch_S <-  df.coho.long2 %>% filter(Wild.or.hatch=="H")
+
+wild_SL <- wild_S$snoutL
+#wild_SH <- wild_S$snoutH
+hatch_SL<- hatch_S$snoutL
+#hatch_SH <- hatch_S$snoutH
+
+#now t-test
+#we predict that
+t.SL.coho.l <- t.test(x=hatch_SL, y=wild_SL, alternative= "less", var.equal=T)
+#t.SH.coho <- t.test(x=hatch_eggs_pink, y=wild_eggs_pink, alternative= "less")
+t.SL.coho.l
+
+#revisit 10/25/21
+#t.test(x=hatch_SL, y=wild_SL, alternative= "two.sided")
+
+#revisit 11/23/21
+##want to check error assumptions (especially constant variance)
+t.sl.long.aov <- aov(snoutL ~ Wild.or.hatch, df.coho.long2)
+summary.lm(t.sl.long.aov)
+plot(t.sl.long.aov)
+
+#05/04/22
+sl.long.length.aov <- aov(snoutL ~ length + Wild.or.hatch, df.coho.long2)
+summary(sl.long.length.aov)
+
+coho_L_snout_05 <- lm(snoutL ~ length + Wild.or.hatch, df.coho.long2)
+summary(coho_L_snout_05)
+
+1-0.002575/2
+
+coho_all_snout_05 <- lm(snoutL ~ length + Wild.or.hatch, df.coho)
+summary(coho_all_snout_05)
+
+```
+
+
+And for all coho: snouts are not longer for wild fish, hypothesis disproved
+```{r}
+#######snout length using geomorph
+lmks <- data.frame(snoutL=c(2,14), snoutH=c(1,3))
+snoutlineardists <- interlmkdist(coho_lands, lmks)
+#snoutlineardists
+snout_df <- as.data.frame(snoutlineardists)
+#ah! so =easy!
+#NOW linear regression on that... how to do again?
+snout_df$Wild.or.hatch <- Wild.or.hatch.d #woohoo, right #'s, no doubles
+#need snout height and snout length as covariates, wild or hatch as a factor
+#or, just use snout lenght and wild or hatch, one sided t-test
+
+#first separate wild and hatchery
+wild_S <-  snout_df %>% filter(Wild.or.hatch=="W")
+hatch_S <-  snout_df %>% filter(Wild.or.hatch=="H")
+
+wild_SL <- wild_S$snoutL
+wild_SH <- wild_S$snoutH
+hatch_SL<- hatch_S$snoutL
+hatch_SH <- hatch_S$snoutH
+
+#now t-test
+#we predict that
+t.SL.coho <- t.test(x=hatch_SL, y=wild_SL, alternative= "less", var.equal = T)
+#t.SH.coho <- t.test(x=hatch_eggs_pink, y=wild_eggs_pink, alternative= "less")
+t.SL.coho
+
+### what about length as covariate?
+
+
+#two sides t-test 10/25/21
+#t.test(x=hatch_SL, y=wild_SL, alternative= "two.sided")
+```
+
+Coho long (over 525? mm). Hatch snouts not shorter than wild snouts (alternate hypothesis not supported) NEED TO QC THAT LENGTH
+```{r}
+
+#length as covariate
+
+#int effects
+mod.c.snout.int <- lm(snoutL ~ length + Wild.or.hatch+ length*Wild.or.hatch, df.coho.long2)
+summary.lm(mod.c.snout.int) #no int effect
+
+mod.c.snout <- lm(snoutL ~ length + Wild.or.hatch, df.coho.long2) #be careful with this dataframe. The comps are wrong...
+summary.lm(mod.c.snout)
+#summary(aov(snoutL ~ length + Wild.or.hatch, df.coho.long2))
+#length IS signficant. so is Wild or hatch. But I believe snoutL is longer in hatch fish, which is weird
+
+#DEPTH- WORK IN PROGRESS
+#mod.c.depth <- lm(depth ~ fishL + Wild.or.hatch, longfish.df)
+#summary.lm(mod.p.d.l)
+#summary(aov(depth ~ fishL + Wild.or.hatch, df.pink2))
+
+```
+
+
+Plots. 
+```{r}
+#ggplot it as well
+ggplot(data=df.coho) + aes(x=length, y=snoutL, color=Wild.or.hatch) + geom_point() + scale_color_brewer(palette="Set2")
+#ggplot(data=snout_df) + aes(x=fishL, y=snoutH, color=Wild.or.hatch) + geom_point() + scale_color_brewer(palette="Set2")
+#ggplot(data=snout_df) + aes(x=snoutH, y=snoutL, color=Wild.or.hatch) + geom_point() + scale_color_brewer(palette="Set2")
+
+mycolors.coho <- c("orange", "blue")
+
+ggplot(data=df.coho.long2) + aes(x=length, y=snoutL, color=Wild.or.hatch) + geom_point() + geom_smooth(method="lm")+ scale_color_manual(values=mycolors.coho) + theme_cowplot() + labs(y="Snout", x= "Length" )
+
+ggplot(data=df.coho.long2) + aes(x=length, y=log(snoutL), color=Wild.or.hatch) + geom_point() + geom_smooth(method="lm")+ scale_color_manual(values=mycolors.coho) + theme_cowplot() + labs(y="Snout", x= "Length" )
+
+
+#re-done snouts for colors 10/12/21
+mycolors.coho <- c("orange", "blue")
+
+ggplot(data=df.coho) + aes(x=length, y=snoutL, color=Wild.or.hatch) + geom_point(size=2) +  scale_color_manual(values=mycolors.coho) + theme_cowplot() + labs(y="Snout", x= "Length" )
+
+ggplot(data=df.coho.long2) + aes(x=length, y=snoutL, color=Wild.or.hatch) + geom_point(size=2) + geom_smooth(method="lm")+ scale_color_manual(values=mycolors.coho) + theme_cowplot() + labs(y="Snout", x= "Length" )
+```
+
+
+
+Depth graph -- QC'ed and looks great!
+```{r}
+ggplot(df.coho.long2)+aes(y=depth, x=length, color=Wild.or.hatch) +geom_point() + scale_color_brewer(palette="Set2")
+
+ggplot(df.coho.long2)+aes(y=log(depth), x=length, color=Wild.or.hatch) +geom_point() + scale_color_brewer(palette="Set2")
+
+ggplot(df.coho)+aes(y=depth, x=length, color=Wild.or.hatch) +geom_point() + scale_color_brewer(palette="Set2")
+
+ggplot(df.coho)+aes(y=log(depth), x=length, color=Wild.or.hatch) +geom_point() + scale_color_brewer(palette="Set2")
+
+qqnorm(df.coho.long2$depth)
+qqnorm(log(df.coho.long2$depth))
+qqnorm(df.coho.long2$snoutL)
+qqnorm(log(df.coho.long2$snoutL))
+
+
+##re-done for color: 10/12/21:
+mycolors.coho <- c("orange", "blue")
+ggplot(df.coho.long2)+aes(y=depth, x=length, color=Wild.or.hatch) +geom_point(size=2) + scale_color_manual(values=mycolors.coho) + theme_cowplot()+labs(y="Depth", x= "Length" )
+
+ggplot(df.coho)+aes(y=depth, x=length, color=Wild.or.hatch) +geom_point(size=2) + scale_color_manual(values=mycolors.coho) + theme_cowplot() + labs(y="Depth", x= "Length" )
+
+#done futher for BALT
+
+#11/23/21
+##so, looks like we may have an outleir....WF27 with length of 513 and depth of 187. Is that depth right? Let's check the photo. Yep, that point is legit, its's a fat fish
+
+
+```
+
+
+Depth code: hatchery humps actually seem to be greater than wild... (disproved hypothesis)
+```{r}
+mod.coho.depth.long <- lm(depth~Wild.or.hatch+length, df.coho.long2)
+summary.aov(mod.coho.depth.long)
+#summary.lm(mod.coho.depth.long)
+
+#checkthe int.effects
+mod.coho.depth.long.int <- lm(depth~Wild.or.hatch + length*Wild.or.hatch, df.coho.long2)
+summary(mod.coho.depth.long.int)
+summary.aov(mod.coho.depth.long.int) #interaction effects don't matter
+
+#coho.gen.df <- snout_df
+#coho.gen.df$depth <- depth_coho_ord
+
+W2 <- df.coho.long2 %>% filter(Wild.or.hatch=="W")
+H2 <- df.coho.long2%>% filter(Wild.or.hatch=="H")
+t.depth.c.long <- t.test(x=H2$depth, y=W2$depth, alternative= "less", var.equal = T)
+t.depth.c.long
+
+#revisit 05/26/22 to get them sd values for my tables
+sd(H2$depth) #colo long depth sd
+sd(W2$depth) #coho long depth sd
+sd(H2$snoutL) #coho long snout sd
+sd(W2$snoutL) #coho long snout sd
+
+#revisit 10/25/21
+#t.test(x=H2$depth, y=W2$depth, alternative= "two.sided")
+
+###########3
+#revisit 11/23/21 #what was the df for coho.all?
+W.depth.all.coho <- df.coho %>% filter (Wild.or.hatch=="W")
+H.depth.all.coho <- df.coho %>% filter (Wild.or.hatch=="H")
+t.depth.c <- t.test(x=H.depth.all.coho$depth, y=W.depth.all.coho$depth, alternative= "less", var.equal = T)
+t.depth.c
+
+#revisit 05/26/22 to get them sd values for my tables
+sd(H.depth.all.coho$depth) #colo all depth sd
+sd(W.depth.all.coho$depth) #coho all depth sd
+names(W.depth.all.coho)
+sd(H.depth.all.coho$snoutL) #coho alll snout sd
+sd(W.depth.all.coho$snoutL) #coho all snout sd
+mean(W.depth.all.coho$snoutL)
+
+#make model and test error assumptions
+aov.depth.c <- aov(depth ~ Wild.or.hatch, df.coho)
+summary.lm(aov.depth.c)
+qqnorm(df.coho$depth)
+qqline(df.coho$depth, col="steelblue")
+plot(aov.depth.c) ##normality and residuals not looking so hot
+#library(car)
+library(MASS)
+boxcox(aov.depth.c, xlab=c(0,4)) #squared or cubed might work...
+
+
+aov.depth.squared <- aov(depth^2 ~ Wild.or.hatch, df.coho)
+plot(aov.depth.squared)
+summary(aov.depth.squared)
+
+aov.depth.cubed <- aov(depth^3 ~ Wild.or.hatch, df.coho)
+plot(aov.depth.cubed)
+summary(aov.depth.cubed)
+
+qqnorm(df.coho$depth^3)
+qqline(df.coho$depth^3, col="steelblue")
+
+#revisit 05/04/22 : to make ANVOVAS where needed to incorporate length (and..other stuff too?)
+##lets do an ANCOVA test, one -way t test
+summary(mod.coho.depth.long) #has length and depth
+aov.depth.c <- lm(depth ~ Wild.or.hatch + length, df.coho)
+summary(aov.depth.c)
+```
+
+
+
+What about these signficance tests for pink? You can clean it up.
+
+PINK SNOUTS
+```{r}
+lmks.p <- data.frame(snoutL=c(1,12))
+snoutlineardists.p <- interlmkdist(pinkdat.landsno56, lmks.p)
+#snoutlineardists
+snout_df.no56 <- as.data.frame(snoutlineardists.p)
+#ah! so easy!
+#snout_df.no56 <- as.data.frame(snout_df.p[-56,])
+#NOW linear regression on that... how to do again?
+#snout_df.no56$Wild.or.hatch <- Wild.or.hatch2 #woohoo, right #'s, no doubles
+
+df.pink2$snout <- snout_df.no56$snoutL
+df.pink2
+#df.pink2$snout <- snout_df.no56$snoutL
+#df.pink2$Wild.or.hatch <- Wild.or.hatch2
+
+
+#ADD ANOVA HERE
+
+#first separate wild and hatchery
+wild_S.p <-  df.pink2 %>% filter(Wild.or.hatch=="W")
+hatch_S.p <-  df.pink2 %>% filter(Wild.or.hatch=="H")
+
+#wild_SL.p <- wild_S.p$`snout_df.p[-56, ]`
+#hatch_SL.p<- hatch_S.p$`snout_df.p[-56, ]`
+
+#now t-test
+#we predict that
+t.SL.pink <- t.test(x=hatch_S.p$snout, y=wild_S.p$snout, alternative= "less", var.equal = T)
+#t.SH.coho <- t.test(x=hatch_eggs_pink, y=wild_eggs_pink, alternative= "less")
+t.SL.pink
+
+#pink 2020 sd
+sd(hatch_S.p$snout)
+sd(wild_S.p$snout)
+
+names(wild_S.p)
+sd(hatch_S.p$depth)
+sd(wild_S.p$depth)
+
+#test assumptions
+#plot(fit.p, type = "diagnostics", outliers = TRUE) 
+##need a model to test assumptions
+
+#add length in there too
+
+
+```
+
+
+Length pinks: 
+```{r}
+#get the lengths for pink
+p.dat <- read.csv("/Users/alexandrareich/Desktop/Masters Proposal/R_code_Git_WD/MASTERMalePinksQC.reorder.csv")
+#names(p.dat)
+length_p <- p.dat$Length..mm.
+
+order_p <- c(33, 49, 7, 43, 5, 59, 41, 15, 44, 16, 
+            60, 37, 25, 32, 52, 38, 46, 19, 28, 23,
+            9, 48, 29, 55, 31, 14, 2, 42, 6,
+            13, 18, 39, 10, 1, 57, 22, 50, 30, 35,
+            51, 54, 21, 47, 26, 34, 11, 3, 58, 24,
+            53, 36, 20, 8, 27, 56, 4, 40, 17, 45, 12)
+anyDuplicated(order_p) #yay, no duplicates!
+
+
+length_p_ord <- numeric(60)
+
+i=1
+for (i in (1:length(order_p))){
+  length_p_ord[i] <- length_p[order_p[i]]
+}
+#YES!!!
+length_no_56 <- length_p_ord[-55]
+
+df.pink2$length <- length_no_56
+#and need to restructure PC data to fit in ggplot
+#Comp1_p <- as.data.frame(pca_coho$x[,1])
+#names(Comp1_c)
+
+#order depth
+depth_p <- p.dat$Body.Depth.mm.
+
+depth_p_ord <- numeric(60)
+
+i=1
+for (i in (1:length(order_p))){
+  depth_p_ord[i] <- depth_p[order_p[i]]
+}
+#YES!!!
+depth_no_56 <- depth_p_ord[-55]
+
+df.pink2$depth <- depth_no_56
+
+
+```
+
+
+What does the length vs. depth graph look like?
+```{r}
+
+ggplot(df.pink2)+aes(y=snout, x=length, color=Wild.or.hatch) +geom_point()+ scale_color_brewer(palette="Set2") + geom_smooth(method="lm")
+
+ggplot(df.pink2)+aes(y=log(snout), x=length, color=Wild.or.hatch) +geom_point()+ scale_color_brewer(palette="Set2") + geom_smooth(method="lm")
+
+ggplot(df.pink2)+aes(y=snout^2, x=length, color=Wild.or.hatch) +geom_point()+ scale_color_brewer(palette="Set2")
+
+
+#10/12/21 graph tinkering: changing colors
+ggplot(df.pink2)+aes(y=snout, x=length, color=Wild.or.hatch) +geom_point()+ scale_color_manual(values=mycolors.coho) + theme_cowplot() + labs(x="MEHP Length", y= "Snout")
+```
+DEPTH vs. Origin t-test 
+```{r}
+#df.pink2$fishL <- length_no_56
+#df.pink2$depth <- p.dat$Body.Depth.mm.[-55]
+#ORDER The DEPTH
+
+#first separate wild and hatchery
+wild_D.p.int <-  df.pink2 %>% filter(Wild.or.hatch=="W")
+hatch_D.p.int <-  df.pink2 %>% filter(Wild.or.hatch=="H")
+
+wild_D.p <- wild_D.p.int$depth
+hatch_D.p<- hatch_D.p.int$depth
+
+#now t-test
+#we predict that
+t.D.pink <- t.test(x=hatch_D.p, y=wild_D.p, alternative= "less", var.equal=T)
+#t.SH.coho <- t.test(x=hatch_eggs_pink, y=wild_eggs_pink, alternative= "less")
+t.D.pink
+
+
+ggplot(df.pink2)+aes(y=depth, x=length, color=Wild.or.hatch) +geom_point(size=2)+ scale_color_brewer(palette="Set2")
+ # geom_smooth(method="lm")
+
+ggplot(df.pink2)+aes(y=log(depth), x=length, color=Wild.or.hatch) +geom_point(size=2)+ scale_color_brewer(palette="Set2")
+
+
+#10/12/21
+ggplot(df.pink2)+aes(y=depth, x=length, color=Wild.or.hatch) +geom_point(size=2)+ scale_color_manual(values=mycolors.coho) + labs(x="MEHP length" , y= "Depth") + theme_cowplot()
+
+#11/23/21
+##is var equal?
+
+##what does anova results yield?
+p2.snout <- aov(snout~Wild.or.hatch, data=df.pink2)
+p2.snout.test <- aov(log(snout)~Wild.or.hatch, data=df.pink2)
+p2.depth <- aov(depth~Wild.or.hatch, data=df.pink2)
+p2.depth.test <- aov(log(depth)~Wild.or.hatch, data=df.pink2)
+summary.lm(p2.depth)
+
+plot(resid(p2.depth))
+plot(p2.depth)
+plot(p2.depth.test)
+
+plot(p2.snout)
+plot(p2.snout.test)
+
+
+```
+
+
+DO an ANCOVA with length as the covariate, origin as the factor.
+Based on these results, neither length nor origin is a significant predictor of fish depth. Weird!
+```{r}
+
+#interaction effects?
+mod.p.d.l.int <- aov(depth ~ length + Wild.or.hatch + length*Wild.or.hatch, df.pink2)
+summary.lm(mod.p.d.l.int) #not sig
+
+mod.p.d.l <- aov(depth ~ length + Wild.or.hatch, df.pink2)
+summary.lm(mod.p.d.l)
+summary(aov(depth ~ length + Wild.or.hatch, df.pink2))
+
+#wild or hatch does not make a difference
+
+#let's do this for snout 10/11/21
+mod.p.s.l.int <- aov(snout ~ Wild.or.hatch+length + length*Wild.or.hatch, df.pink2)
+summary.lm(mod.p.s.l.int) #no int effects
+
+mod.p.s.l. <- aov(snout ~ length + Wild.or.hatch, df.pink2)
+summary.lm(mod.p.s.l.)
+
+
+#05/04/22
+#log pink even snout, and pink even depth in analyses
+#in an ancova test, covariate goes first. Shit, might need to re-do coho
+
+mod.p.s.l_05 <- lm(log(snout) ~ length + Wild.or.hatch, df.pink2)
+summary(mod.p.s.l_05)
+mod_no <- lm(snout ~ length + Wild.or.hatch, df.pink2)
+AIC(mod.p.s.l_05)
+AIC(mod_no) #way worse
+
+
+mod.p.d_05<- lm(log(depth) ~ length + Wild.or.hatch, df.pink2)
+
+
+summary(mod.p.d_05)
+summary(mod.p.s.l_05)
+```
+
+
+NEXT
+
+residual plots of models
+```{r}
+#####coho depth (long fish)
+#residual vs. fitted plot
+res <- resid(model.aov.cD)
+plot(fitted(model.aov.cD), res) 
+abline(0,0)
+
+#qq plot
+qqnorm(res)
+qqline(res)
+
+#density plot
+plot(density(res))
+
+#####coho depth (all fish)
+
+
+#######coho snout (long fish)
+res <- resid(mod.c.snout)
+plot(fitted(mod.c.snout), res)
+abline(0,0)
+#qq plot
+qqnorm(res)
+qqline(res)
+#density plot
+plot(density(res))
+
+#maybe test for normality? meh, qq is pretty solid
+
+
+#PINK- PROBLEM
+library(car)
+leveneTest
+
+res <- resid(mod.p.d.l)
+plot(fitted.values(mod.p.d.l), res)
+abline(0,0)
+#qq plot
+qqnorm(res)
+qqline(res)
+#density plot
+plot(density(res))
+```
+
+
+Here's a concept, plot things the easy way
+```{r}
+head(p.dat)
+names(p.dat)
+
+ggplot(p.dat) + aes (x=Length..mm., y= Body.Depth.mm., color=Wild.or.Hatch) +geom_point()
+
+#head()
+```
+
+Take aways:
+Coho results (male)
+- Coho hatchery depth greater
+- Coho hatchery fish longer (MEHP)
+- Coho snouts: hatch fish Longer (hatch fish not shorter)
+- Coho wild fish - longer tails, relatibely speaking
+- hypotheses disproved
+
+Pink results
+- Not significant (depth or snout)
+- Surprise surprise
+
+Residuals:
+- got rid of pink ID 56 (index 55)
+- used coho 525mm and longer for analysis, which cut out ___ # of coho
+
+
+Change dot color of coho lands
+```{r}
+#coho.lands.df.long <- as.data.frame(coho_lands_long)
+#coho.lands.df <- as.data.frame(coho_lands)
+
+#ggplot(coho.lands.df.long)
+
+plotAllSpecimens(coho_lands)
+(a <- plotAllSpecimens(coho_lands_long))
+
+coho_lands_long_w <- coho_lands_long[,,w.cl]
+coho_lands_long_h <- coho_lands_long[,,h.cl]
+
+(x <-plotAllSpecimens(coho_lands_long_w))
+(y <-plotAllSpecimens(coho_lands_long_h))
+
+coho_lands_w <- coho_lands[,,w.c]
+coho_lands_h <- coho_lands[,,h.c]
+plotAllSpecimens(coho_lands_w)
+plotAllSpecimens(coho_lands_h)
+
+
+
+#wild is all over the place why? because they are not dead
+
+#try this in procrustes shape space
+coho_gpa_long_w <- gpa_coho_long$coords[,,w.cl]
+coho_gpa_long_h <- gpa_coho_long$coords[,,h.cl]
+
+plotAllSpecimens(coho_gpa_long_w)
+plotAllSpecimens(coho_gpa_long_h)
+
+coho_gpa_w <- gpa_coho$coords[,,w.c]
+coho_gpa_h <- gpa_coho$coords[,,h.c]
+plotAllSpecimens(coho_gpa_w)
+plotAllSpecimens(coho_gpa_h)
+
+
+#check out the centroid size
+(coho_gpa_long_w_csize <- gpa_coho_long$Csize[w.cl])
+(coho_gpa_long_h_csize <- gpa_coho_long$Csize[h.cl])
+
+mean(coho_gpa_long_w_csize)
+mean(coho_gpa_long_h_csize)
+
+range(coho_gpa_long_w_csize)
+range(coho_gpa_long_h_csize)
+
+sd(coho_gpa_long_w_csize)
+sd(coho_gpa_long_h_csize)
+
+#lets look at the wild fish, one by one
+#the database is called:
+#wild numbers are:
+ref <- mshape(Y.gpa.cl$coords)
+#wildref
+refold <- mshape(coho_lands_long_w)
+
+i=1
+for (i in (1:length(w.cl))){
+  plotRefToTarget(coho_lands_long_w[,,i], refold, method="vector")
+  print(i)
+}
+#plotRefToTarget(coho_lands_long_w[,,1], refold)
+
+
+refoldh <- mshape(coho_lands_long_h)
+
+i=1
+for (i in (1:length(h.cl))){
+  plotRefToTarget(coho_lands_long_h[,,i],refoldh, method="vector")
+  print(i)
+}
+#p
+
+
+#notice how hatchery placement of fish differes
+
+#does this hold consistent for pinks?
+
+
+
+```
+
+Why is all the variation from the wild coho? Does it have to do with lighting? Or is it because the damn fish is still alive?
+
+
+Pinks
+```{r}
+#separate out wild and hatchery lands
+#what is the name of the index separator?
+#pindat.landsno56
+plotAllSpecimens(pinkdat.landsno56)
+plotAllSpecimens(pinkdat.landsno56[,,w.p])
+plotAllSpecimens(pinkdat.landsno56[,,h.p])
+
+```
+
+
+
+RW correlations: 10/13/21 (can't remember why I wanted to do this)
+See undergraduate student guide to geometric morphometrics
+See if a RW is correlated with body size (Csize)... but why?
+```{r}
+
+```
+
+
+Edits 10/25/21
+#need to graph pinks without the outlier
+```{r}
+
+```
+
+
+#prepping other graphs for balitimore
+```{r}
+#p1 with fixed legend
+p1.base.snout <- ggplot(df.pink2)+aes(y=snout, x=length, color=Wild.or.hatch) +geom_point(size=2)+ scale_color_manual(breaks =c("W","H"), values=c("blue", "orange"), name=element_blank(), labels=c("Wild origin", "Hatchery origin")) + theme_cowplot() + labs(x="MEHP length (mm)", y= "Snout (mm)")
+
+p1.base.depth <-  ggplot(df.pink2)+aes(y=depth, x=length, color=Wild.or.hatch) +geom_point(size=2)+ scale_color_manual(breaks =c("W","H"), values=c("blue", "orange"), name=element_blank(), labels=c("Wild origin", "Hatchery origin")) + theme_cowplot() + labs(x="MEHP length (mm)", y= "Depth (mm)")
+
+p1.base.depth.coords <- p1.base.depth + coord_cartesian(ylim = c(98, 180))+
+  scale_y_continuous(breaks=c(100,120,140,160,180), expand=c(0,0))
+
+(p1.base.depth.coords.leg <- p1.base.depth.coords+
+  theme(legend.position = c(0.75, 0.1)))
+  
+  
+
+#snout with no legend
+p1.base.snout.noleg <- p1.base.snout + guides(color="none") #+ 
+    #coord_cartesian(ylim=c(3,7)) +
+   # scale_y_continuous(breaks=c(4,5,6,7), expand=c(0,0))
+
+p1.base.snout.noleg.coord <- p1.base.snout + guides(color="none") + 
+    coord_cartesian(ylim=c(3,7)) +
+    scale_y_continuous(breaks=c(4,5,6,7), expand=c(0,0))
+
+#experiment
+p1.base.snout + guides(color="none") + 
+    coord_cartesian(ylim=c(3,7)) +
+    scale_y_continuous(breaks=c(4,5,6,7), expand=c(0,0)) +geom_smooth(method="lm") #adding in the simple linear model
+
+
+#PREPPING THE COHO GRAPHS FOR BALT
+base.cl.depth <- ggplot(df.coho.long2)+aes(y=depth, x=length, color=Wild.or.hatch) +geom_point(size=2) + scale_color_manual(breaks = c("W","H"), values=c("blue", "orange"), name=element_blank(), labels=c("Wild origin", "Hatchery origin")) + theme_cowplot()+labs(y="Depth (mm)", x= "MEHP length (mm)" )
+
+cl.depth.coords.leg <- base.cl.depth + #guides(color="none")+
+  coord_cartesian(xlim= c(535, 640), ylim= c(145,200))+
+  scale_y_continuous(breaks=c(160, 180, 200), expand=c(0,0)) +
+  theme(legend.position = c(0.75, 0.1)) + geom_smooth(method="lm")
+  
+
+base.c.depth <-ggplot(df.coho)+aes(y=depth, x=length, color=Wild.or.hatch) +geom_point(size=2) + scale_color_manual(values=mycolors.coho) + theme_cowplot() + labs(y="Depth (mm)", x= "MEHP length (mm)" ) 
+
+c.depth.coords.noleg <- base.c.depth + guides(color="none") +
+  coord_cartesian(ylim=c(100,200), xlim = c(420, 650))+
+  scale_y_continuous(breaks = c(100, 150, 200), expand = c(0,0)) + 
+  scale_x_continuous(breaks = c(450, 550, 650))
+
+#now coho snout graphs (for long and all coho)
+snout.c.base <- ggplot(data=df.coho) + aes(x=length, y=snoutL, color=Wild.or.hatch) + geom_point(size=2) +  scale_color_manual(values=mycolors.coho) + theme_cowplot() + labs(y="Snout (mm)", x= "MEHP length (mm)" )
+
+snout.c.noleg.coords <- snout.c.base + guides(color = "none") +
+  coord_cartesian(ylim=c(7.5, 20), xlim = c(410, 650)) +
+  scale_y_continuous(breaks=c(8,12,16,20), expand=c(0,0)) +
+  scale_x_continuous(breaks =c(450,550,650), expand=c(0,0)) +
+  theme(plot.margin = margin(10,12,10,10))
+  
+
+
+
+
+snout.cl.base <- ggplot(data=df.coho.long2) + aes(x=length, y=snoutL, color=Wild.or.hatch) + geom_point(size=2) + geom_smooth(method="lm")+ scale_color_manual(breaks =c("W","H"), values=c("blue", "orange"), name=element_blank(), labels=c("Wild origin", "Hatchery origin")) + theme_cowplot() + labs(y="Snout (mm)", x= "MEPH length (mm)")
+
+snout.cl.leg.coords <- snout.cl.base + theme(legend.position = c(0.02, 0.95)) +
+  coord_cartesian(ylim = c(12,20.5), xlim=c(537, 630)) +
+  scale_y_continuous(breaks = c(12,16,20), expand =c(0,0)) #+
+  #scale_x_continuous()
+  
+
+  
+
+
+```
+
+Russia graphs
+```{r}
+#pink 2020
+ggplot(df.pink2) +geom_point(size=3, aes(y=snout, x=length, color=Wild.or.hatch) )+
+  geom_smooth(method="lm", aes(y=snout, x=length, color=Wild.or.hatch), color="black")+
+  scale_color_manual(breaks =c("W","H"), values=c("blue", "orange"), name=element_blank(), labels=c("Wild origin", "Hatchery origin")) + theme_cowplot() + labs(x="MEHP length (mm)", y= "Snout (mm)")+
+  guides(color="none")
+
+ggplot(df.pink2) +geom_point(size=3, aes(y=depth, x=length, color=Wild.or.hatch) )+ 
+  geom_smooth(aes(y=depth, x=length), method="lm", color="black")+ 
+  scale_color_manual(breaks =c("W","H"), values=c("blue", "orange"), name=element_blank(), labels=c("Wild origin", "Hatchery origin")) + theme_cowplot() + labs(x="MEHP length (mm)", y= "Depth (mm)")+
+  guides(color="none")
+
+#coho 2020 ##DO TONIGHT
+
+
+
+```
+
+
+
+?trajectory.analysis????? 11_01_21
+?plotAllometry
+```{r}
+
+```
+
+
+02/11/21
+Using this opportunity to check between sashin creek and lovers cove for p1
+```{r}
+#df.pink2 is for p1
+names(p.dat)
+ggplot(p.dat) + aes(y=Body.Depth.mm., x=Location) +geom_boxplot() +geom_jitter()
+ggplot(p.dat) + aes(y=Body.Depth.mm., color=Location, x= Length..mm.) + geom_point() +geom_smooth(method="lm")
+
+p.dat.lov <- p.dat %>% filter(Location!= "Armstrong")
+p1.lov <- aov(data=p.dat.lov, Body.Depth.mm. ~ Length..mm. + Location)
+summary.aov(p1.lov)
+
+ggplot(p.dat.lov) + aes(y=Body.Depth.mm., x=Location) +geom_boxplot() +geom_jitter()
+ggplot(p.dat.lov) + aes(y=Body.Depth.mm., color=Location, x= Length..mm.) + geom_point() +geom_smooth(method="lm")
+
+```
+
+Lovers cove fish deeper for length
+
+
+05/06/22:
+Log them graphs: p1 and p2 snout and hump
+```{r}
+######################################3
+#pink 2020
+##log snout
+ggplot(df.pink2) +geom_point(size=3, aes(y=log(snout), x=length, color=Wild.or.hatch) )+
+  geom_smooth(method="lm", aes(y=log(snout), x=length, color=Wild.or.hatch), color="black")+
+  scale_color_manual(breaks =c("W","H"), values=c("blue", "orange"), name=element_blank(), labels=c("Wild origin", "Hatchery origin")) + theme_cowplot() + labs(x="MEHP length (mm)", y= "log(Snout (mm))")+
+  guides(color="none")
+
+#log depth
+ggplot(df.pink2) +geom_point(size=3, aes(y=log(depth), x=length, color=Wild.or.hatch) )+ 
+  geom_smooth(aes(y=log(depth), x=length), method="lm", color="black")+ 
+  scale_color_manual(breaks =c("W","H"), values=c("blue", "orange"), name=element_blank(), labels=c("Wild origin", "Hatchery origin")) + theme_cowplot() + labs(x="MEHP length (mm)", y= "log(Depth (mm))")+
+  guides(color="none")
+#########################################
+
+#########################################
+#pink 2021 #hmmm. Where are these graphs? I think the other scriptfile has them. (the one with p2 in the title). Line 605-ish
+
+```
+
+
+05/19/22
+Formal hatch wild length t-test (2 sided)
+```{r}
+#coho
+names(df.coho) #my dataframe, all
+#df.coho$Wild.or.hatch
+df.coho.W <- df.coho %>% filter(Wild.or.hatch=="W")
+df.coho.H <- df.coho %>% filter(Wild.or.hatch=="H")
+t.test(df.coho.H$length, df.coho.W$length, alternative="two.sided", var.equal=T)
+sd(df.coho.H$length)
+sd(df.coho.W$length)
+#t.test(df.coho.H$length, df.coho.W$length, alternative="two.sided", var.equal=F)
+
+#coho long legths -> just get the means
+#df.coho.long
+names(df.coho.long2)
+coho_L_mean_length_W <- df.coho.long2 %>% filter(Wild.or.hatch=="W")
+coho_L_mean_length_H <- df.coho.long2 %>% filter(Wild.or.hatch=="H")
+mean(coho_L_mean_length_W$length)
+mean(coho_L_mean_length_H$length)
+sd(coho_L_mean_length_W$length)
+sd(coho_L_mean_length_H$length)
+
+#plot coho length
+##likely do a violin wiht sina overlay
+##or can also do a boxplot
+library(patchwork)
+ggplot(df.coho) + aes(x=Wild.or.hatch, y=length) + geom_boxplot()+ geom_jitter()
+
+
+#even-year pinks length
+#df.pink2
+names(df.pink2)
+df.evenpink.W <- df.pink2 %>% filter(Wild.or.hatch=="W")
+df.evenpink.H <- df.pink2 %>% filter(Wild.or.hatch=="H")
+t.test(df.evenpink.H$length, df.evenpink.W$length, alternative="two.sided", var.equal=T)
+sd(df.evenpink.H$length)
+sd(df.evenpink.W$length)
+
+
+#odd-year pinks length
+
+
+#patchwork graph of even yera, odd year pinks, coho, sina length graph with violin...
+```
+
+
+Tedious multi-pane graphing, oh boy!
+Final graph compilation
+```{r}
+##fuck. we're going to want to go back and remove unusually long fish from analysis
+######################################3
+#pink 2020 graph base (logged)
+##fuck. we're going to want to go back and remove unusually long fish from analysis
+range(log(df.pink2$snout)) #1.18, 1.91
+range(log(df.pink2$depth)) #4.6, 5.2
+range(df.pink2$length) #371, 515
+
+ggSnout_p1 <-ggplot(df.pink2) +geom_point(size=3, aes(y=log(snout), x=length, color=Wild.or.hatch) )+
+  geom_smooth(method="lm", aes(y=log(snout), x=length, color=Wild.or.hatch), color="black")+
+  scale_color_manual(breaks =c("W","H"), values=c("blue", "orange"), name=element_blank(), labels=c("Wild origin", "Hatchery origin")) + theme_cowplot() + labs(x="Length (mm)", y= "log(Snout (mm))")+
+  guides(color="none") + 
+  coord_cartesian(xlim=c(367, 520), ylim=c(1.15, 2.0))+
+  scale_x_continuous(breaks=c(400, 440, 480, 520), expand=c(0,0)) + 
+  scale_y_continuous(breaks= c(1.2, 1.4, 1.6, 1.8, 2.0), expand=c(0,0))
+#looks decent
+
+#log depth
+ggDepth_p1 <- ggplot(df.pink2) +geom_point(size=3, aes(y=log(depth), x=length, color=Wild.or.hatch) )+ 
+  geom_smooth(aes(y=log(depth), x=length), method="lm", color="black")+ 
+  scale_color_manual(breaks =c("W","H"), values=c("blue", "orange"), name=element_blank(), labels=c("Wild origin", "Hatchery origin")) + theme_cowplot() + labs(x="Length (mm)", y= "log(Depth (mm))")+
+  guides(color="none")+
+  coord_cartesian(xlim = c(367, 520), ylim=c(4.55, 5.2))+
+  scale_x_continuous(breaks=c(400, 440, 480, 520), expand=c(0,0)) +
+  scale_y_continuous(breaks=c(4.6, 4.8, 5.0, 5.2), expand=c(0,0)) #might need to do somehting to protect the margins? We'll see how it looks in the compound plot
+
+
+#re-do p2020 without the outlier
+
+
+###################3
+#coho long graph base
+ggplot(data=df.coho.long2) + aes(x=length, y=snoutL, color=Wild.or.hatch) + geom_point() + geom_smooth(method="lm")+ scale_color_manual(values=mycolors.coho) + theme_cowplot() + labs(y="Snout", x= "Length")
+
+mycolors.coho <- c("orange", "blue")
+ggplot(df.coho.long2)+aes(y=depth, x=length, color=Wild.or.hatch) +geom_point(size=2) + scale_color_manual(values=mycolors.coho) + theme_cowplot()+labs(y="Depth", x= "Length")
+
+```
+```{r}
+#misc calcs
+how_many_hatch <- df.coho.long %>% filter(Wild.or.hatch=="W")
+length(how_many_hatch$Wild.or.hatch)
+#df.coho.long%>% filter(Wild.or.hatch=="W"))
+```
+
+Time for a length comparison graph
+```{r}
+
+```
+
