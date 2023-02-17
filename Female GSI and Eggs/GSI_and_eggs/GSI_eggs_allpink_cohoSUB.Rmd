@@ -1,0 +1,1226 @@
+---
+title: "Cleaned up analyses, QCed_cohosub"
+author: "Alex"
+date: "11/20/2021"
+output: html_document
+---
+COho sub!!!
+
+
+```{r setup, include=FALSE}
+#knitr::opts_chunk$set(echo = TRUE)
+```
+
+Relevant libraries
+```{r}
+library(ggplot2)
+library(cowplot)
+library(lme4)
+library(nlme)
+library(tidyverse)
+library(dplyr)
+
+library(AICcmodavg)
+library(MASS)
+library(lattice)
+library(GGally)
+library(mgcv)
+library(lmtest)
+library(nlme)
+library(visreg)
+
+library(lmerTest)
+```
+
+
+PINK YEAR 1: Females
+LOAD DATAS
+```{r}
+p1 <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs Revisted Yr1/FemalePinkGSIotodataadd1_without_gaps copy.csv")
+
+#prep GSI
+p1$GSI <- (p1$Total.Egg.Mass.g./p1$Fish.Weight..g.) *100
+p1.clean <- p1 %>% filter(Weird == "n", Otolith.results != "unknown") #getting rid of weird and unknown
+
+
+#p1$GSI <- (p1$Total.Egg.Mass.g./p1$Fish.Weight..g.) *100
+#p1.clean <- na.omit(p1) %>% filter(Weird == "n", Otolith.results != "unknown")
+#p1.GSI.mod <- aov(GSI ~ Otolith.results, data = p1.clean)
+#summary(p1.GSI.mod) ##THIS ONE
+#summary.lm(p1.GSI.mod)
+
+p1.wild.GSI.ttest <- p1.clean %>% filter(Otolith.results == "no mark")
+p1.hatch.GSI.ttest <- p1.clean %>% filter(Otolith.results == "PORT ARMSTRONG")
+#(p1.GSI.t.test <- t.test(p1.hatch.GSI.ttest$GSI, p1.wild.GSI.ttest$GSI, alternative="greater")) #this is it!!!
+##t = -1.1983, df = 15.484, p-value = 0.8756. Hypothesis disproved
+
+
+plot(p1.clean[c(2, 3, 4, 15, 11)]) #splorin
+
+
+#testin
+aov.p1.GSI <- aov(GSI~Otolith.results, p1.clean)
+sum.p1.GSI <- summary.lm(aov(GSI~Otolith.results, p1.clean))
+
+#(p1.GSI.t.test <- t.test(p1.hatch.GSI.ttest$GSI, p1.wild.GSI.ttest$GSI, alternative="greater")) 
+
+(p1.GSI.t.test <- t.test(p1.hatch.GSI.ttest$GSI, p1.wild.GSI.ttest$GSI, alternative="greater", var.equal=T)) ##maybe I should use THIS one, if I assume the variances are equal
+
+#are the variances equal?
+plot.new()
+plot(resid(aov.p1.GSI))
+  
+ggplot() + aes(y= resid(aov.p1.GSI), x=p1.clean$Otolith.results) + geom_point()
+#identify(resid(aov.p1.GSI)) #point 35 is an outlier
+#View(p1.clean)
+
+plot(aov.p1.GSI) #says outlier is not sig
+
+
+#sd 05/25/22
+sd_p1_w <- sd(p1.wild.GSI.ttest$GSI)
+sd_p1_h <- sd(p1.hatch.GSI.ttest$GSI) #excellent. Now do the GSI graphs
+
+#length test 07/25/22 (dont use)
+mod_p1_length <- lm(GSI~Otolith.results + Length..mm., p1.clean)
+summary(mod_p1_length)
+
+```
+
+PINK Y2 GSI
+```{r}
+p2.GSI <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Fish/Female.p2.Rdata.3.csv")
+names(p2.GSI)
+
+p2.GSI <- p2.GSI %>%
+  mutate(GSI.2 = (GSI.measure.2.g./Fish.weight.g.)*100, 
+         GSI.1 = (GSI.measure.1.g./Fish.weight.g.)*100)  #we're going to use GSI.1 here though. It's the GSI before removing Ov fluid
+
+p2.GSI.clean <- p2.GSI %>% filter(Weird =="n", Oto.reading != "No Oto", Oto.reading != "Overground")
+p2.GSI.clean.relevant <- p2.GSI.clean[c(1, 2, 19,14,4)]
+
+#mod.p2.GSI <- aov(GSI.1~ Oto.reading + Length.mm.,data=p2.GSI.clean.relevant)
+#mod.p2.GSI.noint <- aov(GSI~ Oto.reading + Length.mm. -1,data=p2.GSI.clean.relevant)
+#summary(mod.p2.GSI) #oto reading is not sign, length is.
+#summary(mod.p2.GSI.noint) #length is sig!!!
+#summary.lm(mod.p2.GSI.noint)
+
+#mod.p2.GSI.justoto <- aov(GSI~ Oto.reading,data=p2.GSI.clean.relevant)
+#summary.lm(mod.p2.GSI.justoto)
+
+#r <- resid(mod.p2.GSI.justoto)
+#fitted <- fitted(mod.p2.GSI.justoto)
+#plot(fitted, r)
+
+GSI.for.ttest.wild <- na.omit(p2.GSI.clean.relevant) %>% filter(Oto.reading == "No Mark")
+GSI.for.ttest.hatch <- na.omit(p2.GSI.clean.relevant) %>% filter(Oto.reading == "PORT ARMSTRONG")
+
+(p2.GSI.t.test <- t.test(GSI.for.ttest.hatch$GSI.1,GSI.for.ttest.wild$GSI.1, alternative="greater", var.equal=T))
+
+
+
+#test resids
+aov.p2.GSI <- aov(GSI.1 ~ Oto.reading, p2.GSI.clean.relevant)
+plot(aov.p2.GSI) #51 looks like it may be an outlier, which is HF17
+#View(p2.GSI.clean.relevant)
+#View(p2.GSI.clean)
+#NEED TO CHECK DATA ENTRY FOR HF17
+#cooks says it is ok, but what about the unequal var?
+
+aov.p2.GSI_testlength <- lm(GSI.1 ~ Oto.reading + Length.mm., p2.GSI.clean.relevant)
+summary(aov.p2.GSI_testlength)
+
+plot(p2.GSI.clean.relevant)
+
+library(onewaytests)
+?bf.test 
+bf.test(GSI.1 ~ Oto.reading, p2.GSI.clean.relevant) #says variance is equal
+
+
+##05/05/22
+#test for date significance
+#and maybe location significance
+write.csv(p2.GSI.clean, "p2.GSI.clean.csv") #made this a csv. Now goitn in to edit the date, new date column with early, middle , late in the run
+p2_GSI_clean_date_alt <- read.csv("p2.GSI.clean_altdate.csv")
+
+names(p2_GSI_clean_date_alt)
+aov.p2.GSI_global <- lm(GSI.1 ~ Oto.reading + Date_alt, p2_GSI_clean_date_alt)
+summary(aov.p2.GSI_global)
+
+#sd 05/25/22
+sd(GSI.for.ttest.wild$GSI.1)
+sd(GSI.for.ttest.hatch$GSI.1)
+
+
+#05/25/22
+#LUBRIDATE
+library(lubridate)
+names(p2_GSI_clean_date_alt)
+Date_date <- mdy(p2_GSI_clean_date_alt$Date)
+class(Date_date)
+Julian_GSI <- julian(Date_date, origin = as.Date("2021-01-01"))
+p2_GSI_clean_date_alt$Julian <-  Julian_GSI
+
+aov.p2.GSI_global <- lm(GSI.1 ~ Oto.reading + Julian, p2_GSI_clean_date_alt)
+summary(aov.p2.GSI_global) #not sig at ALLL. Date is not signficant.
+
+```
+
+
+```{r}
+
+```
+
+
+COHO year 1: GSI SUBSETTED
+```{r}
+c.GSI.dat <-read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs Revisted Yr1/MASTERFemaleCohoQCwitheggs_copy.csv")
+c.GSI.dat$GSI <- (c.GSI.dat$Total.Egg.Mass.g./c.GSI.dat$Fish.Weight..g.)*100
+
+
+#get GSI
+c.GSI.clean <- na.omit(c.GSI.dat) %>% filter (Weird == "n")
+#edits 10
+#c.GSI.clean <-559 to 608
+c.GSI.clean <- c.GSI.clean %>% filter(Length..mm.>= 559&Length..mm.<=608)
+c.GSI.wild.t.test <- c.GSI.clean %>% filter(Wild.or.Hatch=="wild")
+c.GSI.hatch.t.test <- c.GSI.clean %>% filter(Wild.or.Hatch=="hatchery")
+
+(coho.GSI.t.test <- t.test(c.GSI.hatch.t.test$GSI,c.GSI.wild.t.test$GSI, alternative="greater", var.equal=T))
+#t = 1.4608, df = 51.395, p-value = 0.07507 -> old
+#t = 1.4608, df = 52, p-value = 0.07504 -> old
+#new: t = 2.0034, df = 37, p-value = 0.02625
+
+sd(c.GSI.wild.t.test$GSI)
+sd(c.GSI.hatch.t.test$GSI)
+
+
+#try with no weird. a test t-test
+c.GSI.wild.t.test.WRONG <- c.GSI.dat %>% filter(Wild.or.Hatch=="wild")
+c.GSI.hatch.t.test.WRONG <- c.GSI.dat %>% filter(Wild.or.Hatch=="hatchery")
+t.test(c.GSI.hatch.t.test.WRONG$GSI,c.GSI.wild.t.test.WRONG$GSI, alternative="greater")
+#WRONG: Because why??? Because I use "weird fihs with super small GSI?? fish with 
+###t = 1.709, df = 52.777, p-value = 0.04667
+####this p value does not matach that from my last analyses...why? Maybe I took out some fish by hand. I';ll have to check that..
+
+###I CHECKED. The last analyses did not clear all of the green fish!!
+
+
+#var.equal?
+c1.aov.GSI <- aov(GSI ~ Wild.or.Hatch, c.GSI.dat)
+plot(c1.aov.GSI) #looks good
+
+
+
+#anova try it 11/05/22  
+c_GSI_anova <- lm(GSI ~ Wild.or.Hatch + Length..mm., c.GSI.clean)
+summary(c_GSI_anova) #length is not sig in subsetted data.
+
+```
+
+Further GSI QC and experimentation:
+```{r}
+plot(p2.GSI.clean.relevant) #might be an outlier
+hist(p2.GSI.clean.relevant$GSI.1)
+#HF17 is the GSI outlier.
+##might be worth an outlier analysis on HF17. high GSI. would not change significance though
+
+```
+
+Quick aside to create a csv for my GSI
+```{r}
+
+```
+
+
+EGGS
+(ok how to go about this...) There's some complex data wrangling and I need to make sure I copy it over correctly. And the mixed effect model as well.
+(might be easiest to start backwards)
+
+
+
+P1 Eggs
+```{r}
+p1.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs Revisted Yr1/P1.egg.diameters.csv")
+names(p1.all.eggs)
+head(p1.all.eggs)
+
+#the other pink even data
+p1.other.data<- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs Revisted Yr1/FemalePinkGSIotodataadd1_without_gaps copy.csv")
+p1.other.data$Fish.ID <- p1.other.data$ID
+
+#extract the oto result...or Join by the ID!!!!
+p1.df <- full_join(p1.all.eggs, p1.other.data, by="Fish.ID")
+p1.df.no.unknown <-p1.df %>% filter(Otolith.results != "unknown") #hmm no weird column might have to adjust, make sure WEIRD fish are out.
+p1.df.clean <- p1.df.no.unknown %>% filter(Weird =="n")
+
+
+#conceptual model
+fit.lm.p1 <- lm(Diameter..mm. ~ Length..mm. + Otolith.results + Length..mm.:Otolith.results, data=na.omit(p1.df.clean))
+
+# use REML to find the best random structure
+fit.p1.B <- lmer(Diameter..mm. ~ Length..mm. + Otolith.results +
+                   Length..mm.:Otolith.results +
+                   (1|ID), data=na.omit(p1.df.clean), REML=T)
+
+AIC(fit.p1.B, fit.lm.p1) #random intercept wins, by a lot
+
+#use ML to find best fitted structure
+fit.p1.B1 <- lmer(Diameter..mm. ~ Length..mm. + Otolith.results +
+                   Length..mm.:Otolith.results +
+                   (1|ID), data=na.omit(p1.df.clean), REML=F)
+fit.p1.C <- lmer(Diameter..mm. ~ Length..mm. + Otolith.results +(1|ID), data=na.omit(p1.df.clean), REML=F)
+fit.p1.C1 <- lmer(Diameter..mm. ~ Otolith.results +(1|ID), data=na.omit(p1.df.clean), REML=F)
+fit.p1.C2 <- lmer(Diameter..mm. ~ 1 + (1|ID), data=na.omit(p1.df.clean), REML=F)
+AIC(fit.p1.B1,fit.p1.C, fit.p1.C1, fit.p1.C2) #simplest one wins
+
+#best model for p1: fit.p1.D
+fit.p1.D <- lmer(Diameter..mm. ~ 1 + (1|ID), data=na.omit(p1.df.clean), REML=T)
+fit.p1.C1.REML <- lmer(Diameter..mm. ~ Otolith.results +(1|ID), data=na.omit(p1.df.clean), REML=T)
+fit.p1.lme <-  lme(fixed = Diameter..mm. ~ 1, random = ~1|ID, data=p1.df.clean, method="REML")
+summary(fit.p1.D)
+summary(fit.p1.C1.REML) 
+
+#t-test sig
+##yeilds 0.162
+(0.162)/2
+#t=1.424 on 44 df, p= 0.081
+
+
+#get those parameter estimates...
+fit.p1.lme.param.noint <-  lme(fixed = Diameter..mm. ~ Otolith.results -1 , random = ~1|ID, data=p1.df.clean, method="REML")
+fixef(fit.p1.lme.param.noint)
+summary(fit.p1.lme.param.noint)
+
+fit.p1.lme.param.yesint <-  lme(fixed = Diameter..mm. ~ Otolith.results , random = ~1|ID, data=p1.df.clean, method="REML")
+summary(fit.p1.lme.param.yesint)
+
+
+#wait but which way is that t-test?
+0.162/2
+1-0.162/2
+
+
+#a graph
+p1.df.clean$fitted <- fitted(fit.p1.D) 
+(p1.goodplot <- ggplot(p1.df.clean) + aes() + geom_jitter(aes(y=Diameter..mm., x=Otolith.results)) + 
+  geom_boxplot(aes(y=fitted, x=Otolith.results), alpha=0.7))
+
+summary(fit.p1.D)
+
+
+
+```
+
+P2 Eggs: QC IN PROGRESS
+```{r}
+#load in them datas
+p2.GSI <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Fish/Female.p2.Rdata.3.csv")
+names(p2.GSI)
+
+library(dplyr)
+GSI.data <- p2.GSI %>%
+  mutate(GSI.2 = (GSI.measure.2.g./Fish.weight.g.)*100, 
+         GSI.1 = (GSI.measure.1.g./Fish.weight.g.)*100)
+
+## y=GSI, x= length, color and shape= otolith resuls
+GSI.data.2 <- GSI.data %>%
+  mutate(Oto.reading.2 = ifelse(Oto.reading!="Overground", Oto.reading, "none"),)
+GSI.data.3 <- GSI.data.2 %>%
+  mutate(Oto.reading.3 = ifelse(Oto.reading.2!="No Oto", Oto.reading.2, "none"),)
+GSI.data.4 <- GSI.data.3 %>%
+  mutate(Oto.reading.4 = ifelse(is.na(Oto.reading.3), "none", Oto.reading.3),)
+
+GSI.nogreen <- GSI.data.4 %>% filter(Weird == "n")
+
+#ok , that was just GSI, don't actually need the above...
+#EGG TIME!
+
+
+#pink odd (p2)###########################
+p2.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs/Results.p2.ImageJ.eggs.csv")
+library(tidyverse)
+df.hold <- data.frame(unique(p2.all.eggs$Label))
+#I manually added in the photo ID's. They are under "Label" in both of the dataframes
+length(na.omit(GSI.data.4$Label)) #and then QC'ed.because they didnt line up. Now they line up
+length(unique(p2.all.eggs$Label))
+
+order(unique(p2.all.eggs$Label))
+
+##MERGE TIME
+p2.df <-  full_join(p2.all.eggs, GSI.data.4, by="Label")
+head(p2.df) 
+names(p2.df)
+p2.df.2 <- p2.df %>%   #get the diameter from the area
+  mutate(Diameter = 2*sqrt(Area/pi))
+head(p2.df.2)
+names(p2.df.2)
+
+#let's remove the unknowns
+p2.df.no.unknown <- p2.df.2 %>% filter(Oto.reading.4 != "none")
+#and remove weird (the green or spawned fish)
+p2.df.clean <- p2.df.no.unknown %>% filter(Weird == "n")
+#View(p2.df.clean)
+
+##IN THE MIDDLE OF THIS NOW. TO FULLY INCLUDE DATE IN CONSIDERATION? I THINK YES....
+##addition 05/24/22: test julian date
+#View(p2.df.clean)
+class(p2.df.clean$Date)
+library(lubridate)
+?lubridate #let's make the dates Julian dates, a numeric
+Date_adj <- mdy(p2.df.clean$Date)
+class(Date_adj) #seemed to work. Tranformed to date
+Julian <- julian(Date_adj, origin = as.Date("2021-01-01"))
+class(Julian) #neat! I did it!
+p2.df.clean$Julian <- Julian
+
+##ZURR steps
+#1 select a full model that includes "important" fixed effects
+fit.p2.A <- lm(Diameter ~ Length.mm. + Oto.reading.4 + Julian +  Length.mm.:Oto.reading.4, data=p2.df.clean)
+summary(fit.p2.A)
+
+
+#2 select/search for optimal random effect structure using REML
+library(lme4)
+fit.p2.B <- lmer(Diameter ~ Oto.reading.4 + Length.mm. + Julian + Oto.reading.4:Length.mm. + (1|ID), data=p2.df.clean, REML=T)
+summary(fit.p2.B)
+
+AIC(fit.p2.A, fit.p2.B) #B wins (with random effects) 
+
+#3 Using optimal random-effect structure. select fixed components for best model using ML #COMPARE USING ML #QCING HERE CURRENTLY
+fit.p2.B.ml <- lmer(Diameter ~ Oto.reading.4 + Length.mm. + Julian + Oto.reading.4:Length.mm. +(1|ID), data=p2.df.clean, REML=F)
+fit.p2.Julian <- lmer(Diameter ~ Oto.reading.4 + Length.mm.+ Julian +(1|ID), data=p2.df.clean, REML=F)
+fit.p2.Julian2 <- lmer(Diameter ~ Oto.reading.4 + Julian +(1|ID), data=p2.df.clean, REML=F)
+fit.p2.B3.ml <- lmer(Diameter ~ Oto.reading.4 + Length.mm. +(1|ID), data=p2.df.clean, REML=F)
+fit.p2.alpha <- lmer(Diameter ~ Oto.reading.4 + Length.mm. + Date + (1|ID), data=p2.df.clean, REML=F)
+fit.p2.B4.ml <-lmer(Diameter ~ Oto.reading.4 + (1|ID), data=p2.df.clean, REML=F) #this one
+fit.p2.B5.ml <-lmer(Diameter ~ 1 + (1|ID), data=p2.df.clean, REML=F) 
+
+AIC(fit.p2.B.ml, fit.p2.B3.ml, fit.p2.B4.ml, fit.p2.alpha, fit.p2.B5.ml, fit.p2.Julian, fit.p2.Julian2) #fit.p2.B4.ml wins
+#update 05/24/22. Fuck, Julian2 date is my best mod. Wait... nno it's not. B4 is better, actually, because it's simpler and within 1 AIC point. So no Julian date needed in this analysis. #NO JULIAN DATE NEEDED. JULIAN DATE DISPROVED. Seemed to have a small effect, but not below the signficance threshhold AND AIC didnt identify it as importatn. WOOO.
+BIC(fit.p2.B.ml, fit.p2.B3.ml, fit.p2.B4.ml, fit.p2.alpha, fit.p2.B5.ml, fir.p2.Julian)
+
+
+##TANGENT - DISPROVED ABOVE!
+#summary(fit.p2.alpha)
+#anova(fit.p2.alpha, fit.p2.B3.ml) #fuck, the date model is sig. vua the loglik but NOT via AIC... #for simplicity, I'll stick with NO DATE for now...
+##TANGENT
+
+#use the REML verstion of the best model to get param estimates
+p2.relevant <- na.omit(p2.df.clean[c(14, 34, 35)])
+
+fit.p2.B4.reml <-lmer(Diameter ~ Oto.reading.4 + (1|ID), data=p2.relevant, REML=T) #this one
+summary(fit.p2.B4.reml) #attach lmerTest for one thing, detatch lmerTest for other #with lmerTest, gives t-value but no df or p-value. Wihtout lmer test, yes p-val
+#what was the thing about REML not relevant for comparison... REML for parameter estimates, ML for model selection?
+compare <- lmer(Diameter ~ (1|ID), data=p2.relevant, REML=T) #this one
+anova(fit.p2.B4.reml, compare )
+#Anova(fit.p2.B4.reml, compare )
+
+fit.p2.lme <- lme(fixed = Diameter ~ Oto.reading.4, random = ~1|ID, data= p2.relevant, method="REML")
+fit.p2.lme.noint <- lme(fixed = Diameter ~ Oto.reading.4-1, random = ~1|ID, data= p2.relevant, method="REML")
+
+summary(fit.p2.B4.reml)
+fixef(fit.p2.lme.noint)
+summary(fit.p2.lme)
+summary(fit.p2.lme.noint)
+
+#p-val: 0.000252
+1-(0.000252/2)
+#(1-0.000252)/2
+
+```
+
+
+
+Coho Eggs
+```{r}
+#prepping data. And get rid of them NA's!
+c.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs Revisted Yr1/coho.egg.diameters.csv")
+c.all.other.stuff <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs Revisted Yr1/MASTERFemaleCohoQCwitheggs_copy.csv")
+
+names(c.all.eggs)
+names(c.all.other.stuff)
+
+
+c.df <- full_join(c.all.eggs, c.all.other.stuff, by="Fish.ID")
+head(c.df)
+#View(c.df)
+names(c.df)
+
+coho.clean <- c.df %>% filter(Weird == "n")
+coho.clean <- coho.clean %>% filter(Length..mm. >= 559 & Length..mm. <=608) 
+
+#number of hatch and wild in new (sub) dataset calc
+hatch_count_eggs <- coho.clean%>% filter(Wild.or.Hatch=="hatchery")
+wild_count_eggs <- coho.clean%>% filter(Wild.or.Hatch=="wild")
+length(unique(hatch_count_eggs$Fish.ID)) #22
+length(unique(wild_count_eggs$Fish.ID)) #18 (includes WF-25)
+
+#conceptual model (mixed model with interaction effects too)
+fit.c.A.INT <- lm(Diameter..mm. ~ Length..mm. + Wild.or.Hatch + Length..mm.:Wild.or.Hatch, data=coho.clean)
+
+#reml to select mixed effects
+fit.c.GLOBAL <- lmer(Diameter..mm. ~ Length..mm. + Wild.or.Hatch+Length..mm.:Wild.or.Hatch +(1|ID), data=coho.clean, REML=T)
+#fit.c.B.INT <- lmer(Diameter..mm. ~ Length..mm. + Wild.or.Hatch + Length..mm.:Wild.or.Hatch +(1|ID), data=coho.clean, REML=T)
+AIC(fit.c.GLOBAL, fit.c.A.INT) #mixed effect model wins!
+
+#ml to select fixed effects
+fit.c.GLOBAL.ml <- lmer(Diameter..mm. ~ Length..mm. + Wild.or.Hatch+Length..mm.:Wild.or.Hatch +(1|ID), data=coho.clean, REML=F)
+
+fit.c.C <- lmer(Diameter..mm. ~ Length..mm. + Wild.or.Hatch +(1|ID), data=coho.clean, REML = F)
+
+fit.c.C1 <- lmer(Diameter..mm. ~ Wild.or.Hatch +(1|ID), data=coho.clean, REML = F)
+fit.c.C2 <- lmer(Diameter..mm. ~ 1 + (1|ID), data=coho.clean, REML = F)
+fit.c.C3 <- lmer(Diameter..mm. ~ Length..mm. +(1|ID), data=coho.clean, REML = F)
+AIC(fit.c.C, fit.c.C1, fit.c.C2, fit.c.C3, fit.c.GLOBAL.ml) #C1 is winner.
+
+
+
+
+#model that was selected
+##(and fit to model without intercept for the standard errors)
+fit.c.C1.REML <- lmer(Diameter..mm. ~ Wild.or.Hatch +(1|ID), data=coho.clean, REML = T)
+summary(fit.c.C1.REML)
+
+fit.lme <- lme(fixed = Diameter..mm. ~ Wild.or.Hatch, random = ~1|ID, data=coho.clean, method="REML")
+summary(fit.lme)
+
+fit.lme.no.int <- lme(fixed = Diameter..mm. ~ Wild.or.Hatch-1, random = ~1|ID, data=coho.clean, method="REML")
+summary(fit.lme.no.int)
+
+
+#parameter estimates
+ranef(fit.lme.no.int)
+fixef(fit.lme.no.int)
+summary(fit.lme)
+summary(fit.lme.no.int)
+
+#graph that
+(coho.egg.graph <- ggplot(coho.clean) + aes(x=Length..mm., y=Diameter..mm., color=Wild.or.Hatch) +
+    geom_point(alpha=0.5) + scale_color_manual(values=c("blue", "orange"), name=element_blank(), labels=c("Wild origin", "Hatchery origin"), breaks=c("wild", "hatchery"))+
+    labs(y="Egg diameter (mm)", x="MEHP length (mm)")+
+    theme_cowplot() +
+    theme(legend.position = c(0.03, 0.94))+
+    coord_cartesian(ylim=c(5,8.5)) +
+    scale_y_continuous(breaks=c(5,6,7,8), expand=c(0,0)))
+
+(cf.fix <- fixef(fit.lme.no.int))
+# and the corresponding random effects:
+(cf.rand <- ranef(fit.lme.no.int))
+Intervals <- intervals(fit.lme.no.int)
+names(Intervals)
+Intervals$fixed[1,1]
+Intervals$fixed[1,3]
+
+
+coho.egg.graph + 
+  geom_ribbon(aes(ymin=Intervals$fixed[1,1], ymax=Intervals$fixed[1,3]), color="grey", alpha=0.3) + geom_ribbon(aes(ymin= Intervals$fixed[2,1], ymax=(Intervals$fixed[2,3])), color="grey", alpha=0.3)+
+  geom_hline(yintercept = cf.fix[1], color="orange", size=1.5) + geom_hline(yintercept = cf.fix[2], color="blue", size=1.5)+
+  coord_cartesian(ylim=c(5,8.3)) +
+  scale_y_continuous(breaks=c(5,6,7,8), expand=c(0,0)) 
+
+
+#QCing fixef values.
+##what am I deleting when I na.omit(coho.clean) ???
+names(coho.clean)
+coho.clean.relevant <- coho.clean[c(1, 4, 3, 5, 13)]
+names(coho.clean.relevant)
+
+
+fit.lme.no.int.testna <- lme(fixed = Diameter..mm. ~ Wild.or.Hatch-1, random = ~1|ID, data=coho.clean.relevant, method="REML")
+fixef(fit.lme.no.int.testna)
+
+fit.lme.no.int.testna2 <- lme(fixed = Diameter..mm. ~ Wild.or.Hatch-1, random = ~1|ID, data=na.omit(coho.clean.relevant), method="REML")
+fixef(fit.lme.no.int.testna2)
+
+fit.lme.no.int.testna3 <- lme(fixed = Diameter..mm. ~ Wild.or.Hatch-1, random = ~1|ID, data=na.omit(coho.clean), method="REML")
+fixef(fit.lme.no.int.testna3)
+#based on these tests, the original way of omiting all NA cut out things I didnt want to get rid of!
+unique(coho.clean$Weird)
+
+
+
+##AAAAND t-test that coho datas.
+t.test.wild <- coho.clean %>% filter(Wild.or.Hatch=="wild")
+t.test.hatch <- coho.clean %>% filter(Wild.or.Hatch=="hatchery")
+#(t.test.coho.eggs <-t.test(t.test.hatch$Diameter..mm.,t.test.wild$Diameter..mm., alternative="less", var.equal = T))
+
+summary(fit.lme) #this does not match
+summary(fit.lme)
+summary(fit.c.C1.REML)
+
+#p-val for fitted model
+fit.null.ML <- lme(fixed = Diameter..mm. ~ 1, random = ~1|ID, data=coho.clean, method="ML")
+fit.lme.ML <- lme(fixed = Diameter..mm. ~ Wild.or.Hatch, random = ~1|ID, data=coho.clean, method="ML")
+summary(fit.lme.ML)
+anova(fit.lme, test=T, type="marginal")
+anova(fit.lme.ML, fit.null.ML)
+
+```
+
+Create a function that calculate sd from a confidence interval
+```{r}
+#confient is: mean +- 1.98*se
+sd_from_confint <- function(upper, lower){
+  u <- mean(c(upper, lower))
+  sd_calced <- (upper-u)/1.98 #ned to do this formula on paper. Ok I did. This looks right
+}
+```
+
+
+RESULTS SUMMARY
+```{r}
+#GSI:
+p1.GSI.t.test
+p2.GSI.t.test
+coho.GSI.t.test
+
+p1.GSI.t.test$stderr
+p2.GSI.t.test$stderr
+coho.GSI.t.test$stderr
+
+#EGGS:
+
+library(lmerTest)
+#p1
+#so, fit.p1.C1.REML needs to be fit with lmerTest installed. This is how you get df and p-value estimation.
+summary(fit.p1.C1.REML)
+#with lmerTest summary, the p-val is 0.162
+#0.162/2 to make it one-sided is:
+#1- that if it's the other side we're testing?
+
+#lmerTest::summary(fit.p1.C1.REML)
+#pvalues(fit.p1.C1.REML)
+#?summary.lmerModLmerTest
+#summary.lmerModLmerTest(fit.p1.C1.REML)
+fixef(fit.p1.lme.param.noint)
+summary(fit.p1.lme.param.noint)
+#anova(fit.p1.lme.param.noint) #505/05/22
+#find the t-dist... what are my degrees of freedom??
+?pvalues
+fit.p1.lme.param.yesint #contemport of fit.p1.C1.REML
+nlme::intervals(fit.p1.lme.param.yesint)
+nlme::intervals(fit.p1.lme.param.noint)
+#pvalues(fit.p1.lme.param.yesint)
+#library(lme4)
+#library(coda)
+#model.pvals.p1 <- pvals.fnc(fit.p1.C1.REML, nsim=100, withMCMC=T)
+
+
+#p2
+summary(fit.p2.B4.reml)
+fixef(fit.p2.B4.reml)
+fixef(fit.p2.lme.noint)
+summary(fit.p2.lme)
+summary(fit.p2.lme.noint)
+names(summary(fit.p2.B4.reml))
+#?summary.lmerModLmerTest
+#?lme4::summary.merMod
+#summary(fit.p2.B4.reml)$sigma
+#but what for wild and hatch individyally?
+#see franz write up, perhaps
+#sd of this pop:
+##what's the df called?
+confint(fit.p2.B4.reml)#seemed to have worked??
+nlme::intervals(fit.p2.lme.noint)
+#intervals()
+#can calc sd from this, can make a funciton.
+##is this right? I hope so. or just see your graphs. They'll have the confidence intervals too...
+
+
+#Coho parameter estimates
+ranef(fit.lme.no.int)
+fixef(fit.lme.no.int)
+summary(fit.lme.no.int)
+summary(fit.c.C1.REML)
+summary(fit.lme)
+anova(fit.lme, test=T, type="marginal")
+anova(fit.c.C1.REML, test=T, type="marginal")
+##length is sig here, isnt it. Don't I need to report estimates with length in the formula then...? 05/24/22
+#maybe...
+
+
+#t test: 0.000531/2 = 0.0002655 #IS THE OLD
+#t-test sub: 0.001044/2= 0.000522 #this is new t-test
+
+```
+
+
+SD's <- careful, they dont match what you've already written...
+All sorts of diffferent ways, I went with lme 
+```{r}
+##OH! can just use the summary function to see the SE... which is the SD. DUH!!
+#Might need to fix my updated graphs tho!
+summary(fit.p1.C1.REML)
+summary(fit.p2.B4.reml)
+summary(fit.c.C1.REML)
+
+#p1
+evn_yr_sd <- confint(fit.p1.C1.REML, method="Wald")
+summary(fit.p1.C1.REML)
+summary(evn_yr_sd)
+fix_p_even <- fixef(fit.p1.C1.REML)
+u_hatch_p1 <- 6.8016400-0.1203733 
+#u_hatch_upper <- u_hatch_p1 + 
+
+evn_wild_sd <- sd_from_confint(6.94806604, 6.6552140)
+evn_hatch_sd <- sd_from_confint(0.04514495, -0.2858916)
+test_noint_intervals_wild <- sd_from_confint(6.952386, 6.650894)
+test_noint_intervals_hatch <- sd_from_confint(6.760717, 6.601816)
+
+#p2
+odd_yr_sd <- confint(fit.p2.B4.reml)
+odd_wild_sd <- sd_from_confint(6.2837442, 6.1043998)
+odd_hatch_sd <- sd_from_confint(0.3329617, 0.1081440) #this one might be wrong. tetsing CI from other parts
+test_hatch <- sd_from_confint(6.483564,6.345686)
+test_hatch_from_nlme_intervals <- sd_from_confint(6.483564, 6.345686)
+
+#coho
+coho_egg_sd <- confint(fit.c.C1.REML)
+coho_egg_wild_sd <- sd_from_confint(0.4852293, 0.1487368)
+coho_egg_hatch_sd <- sd_from_confint(6.6343188, 6.3942294)
+from_lme_wild <- sd_from_confint(6.952008, 6.710507)
+from_lme_hatch <- sd_from_confint(6.637240, 6.391308)
+
+
+#CAREFUL WITH THSES... they dont match sumbers already on table...
+summary(fit.p1.C1.REML)
+fix_p_even <- fixef(fit.p1.C1.REML)
+#intervals(fix_p_even)
+confint(fit.p1.C1.REML)
+
+```
+
+Now I'm working on the male morpho stuff. I think that's pretty well QCed in the morpho write up (no werid fish for that... so I'll use that, taken from the proposal? no, taken fromthe last committee meeting!)
+
+
+
+
+Figures , focus on the figures
+See the morpho coho  for the morpho graphs. "Morpho112221.RMD" in the MORPHO  IN ACTION folder.
+
+
+RUSSIA AMMENDMENTS
+FUCKED UP STUFF, dont use this block
+```{r}
+
+#coho
+#what's the min and max for hatchery and wild lengths?
+hatch.temp <- coho.clean %>% filter(Wild.or.Hatch=="hatchery")
+wild.temp <- coho.clean %>% filter(Wild.or.Hatch=="wild")
+
+hmin.length <- min(hatch.temp$Length..mm.)
+hmax.length <- max(hatch.temp$Length..mm.)
+wmin.length <- min(wild.temp$Length..mm.)
+wmax.length <- max(wild.temp$Length..mm.)
+
+coho.egg.graph + 
+  geom_ribbon(aes(ymin=Intervals$fixed[1,1], ymax=Intervals$fixed[1,3]), color="grey", alpha=0.3) + 
+  geom_ribbon(aes(ymin= Intervals$fixed[2,1],  ymax=(Intervals$fixed[2,3]), xmin= wmin.length, xmax=wmax.length), color="grey", alpha=0.3)+ #wild
+  geom_segment(y = cf.fix[1], yend = cf.fix[1], color="orange", size=1.5, x= hmin.length, xend = hmax.length ) + geom_segment(y = cf.fix[2], yend= cf.fix[2], color="blue", size=1.5, x= wmin.length, xend = wmax.length )+
+  coord_cartesian(ylim=c(5,8.3)) +
+  scale_y_continuous(breaks=c(5,6,7,8), expand=c(0,0)) 
+
+#try geom_bar or #geom_polygon
+coho.egg.graph + 
+  geom_polygon(aes(y=c(Intervals$fixed[1,1], Intervals$fixed[1,3])), color="grey", alpha=0.3) + 
+  geom_polygon(aes(y=c(Intervals$fixed[2,1],Intervals$fixed[2,3])), color="grey", alpha=0.3)+ #wild
+  geom_segment(y = cf.fix[1], yend = cf.fix[1], color="orange", size=1.5, x= hmin.length, xend = hmax.length ) + geom_segment(y = cf.fix[2], yend= cf.fix[2], color="blue", size=1.5, x= wmin.length, xend = wmax.length )+
+  coord_cartesian(ylim=c(5,8.3)) +
+  scale_y_continuous(breaks=c(5,6,7,8), expand=c(0,0)) 
+
+
+###
+coho.egg.graph + 
+  geom_ribbon(aes(ymin=Intervals$fixed[1,1], ymax=Intervals$fixed[1,3]), color="grey", alpha=0.3) + 
+  geom_ribbon(aes(ymin= Intervals$fixed[2,1],  ymax=(Intervals$fixed[2,3]), x = coho.clean$Length..mm. ), color="grey", alpha=0.3)+ #wild
+  geom_segment(y = cf.fix[1], yend = cf.fix[1], color="orange", size=1.5, x= hmin.length, xend = hmax.length ) + geom_segment(y = cf.fix[2], yend= cf.fix[2], color="blue", size=1.5, x= wmin.length, xend = wmax.length )+
+  coord_cartesian(ylim=c(5,8.3)) +
+  scale_y_continuous(breaks=c(5,6,7,8), expand=c(0,0)) 
+
+
+coho.egg.graph + 
+  geom_area(aes(ymin=Intervals$fixed[1,1], ymax=Intervals$fixed[1,3]), color="grey", alpha=0.3) + 
+  geom_ribbon(aes(ymin= Intervals$fixed[2,1],  ymax=(Intervals$fixed[2,3])), color="grey", alpha=0.3)+ #wild
+  geom_segment(y = cf.fix[1], yend = cf.fix[1], color="orange", size=1.5, x= hmin.length, xend = hmax.length ) + geom_segment(y = cf.fix[2], yend= cf.fix[2], color="blue", size=1.5, x= wmin.length, xend = wmax.length )+
+  coord_cartesian(ylim=c(5,8.3)) +
+  scale_y_continuous(breaks=c(5,6,7,8), expand=c(0,0)) 
+
+
+##
+coho.egg.graph + 
+  geom_segment(y=Intervals$fixed[1,1], yend=Intervals$fixed[1,1], color="black", x=hmin.length, xend=hmax.length) +
+  geom_segment(y=Intervals$fixed[1,3], yend=Intervals$fixed[1,3], color="black", x=hmin.length, xend=hmax.length) +
+#hatch
+  geom_segment(y= Intervals$fixed[2,1],  yend=(Intervals$fixed[2,1]), x= wmin.length, xend=wmax.length, color="black")+ 
+    geom_segment(y= Intervals$fixed[2,3],  yend=(Intervals$fixed[2,3]), x= wmin.length, xend=wmax.length, color="black")+ 
+  #wild
+  geom_segment(y = cf.fix[1], yend = cf.fix[1], color="orange", size=1.5, x= hmin.length, xend = hmax.length ) + geom_segment(y = cf.fix[2], yend= cf.fix[2], color="blue", size=1.5, x= wmin.length, xend = wmax.length )+
+  coord_cartesian(ylim=c(5,8.3)) +
+  scale_y_continuous(breaks=c(5,6,7,8), expand=c(0,0))
+
+```
+
+Updated Eggg graph, good, use this block, RUSSIA
+```{r}
+#coho
+coho.eggs <- coho.egg.graph + 
+  geom_segment(y=Intervals$fixed[1,1], yend=Intervals$fixed[1,1], color="black", x=hmin.length, xend=hmax.length, linetype="dashed") +
+  geom_segment(y=Intervals$fixed[1,3], yend=Intervals$fixed[1,3], color="black", x=hmin.length, xend=hmax.length, linetype="dashed") +
+#hatch
+  geom_segment(y= Intervals$fixed[2,1],  yend=(Intervals$fixed[2,1]), x= wmin.length, xend=wmax.length, color="black", linetype="dashed")+ 
+    geom_segment(y= Intervals$fixed[2,3],  yend=(Intervals$fixed[2,3]), x= wmin.length, xend=wmax.length, color="black", linetype="dashed")+ 
+  #wild
+  geom_segment(y = cf.fix[1], yend = cf.fix[1], color="orange", size=1.5, x= hmin.length, xend = hmax.length ) + geom_segment(y = cf.fix[2], yend= cf.fix[2], color="blue", size=1.5, x= wmin.length, xend = wmax.length )+
+  coord_cartesian(ylim=c(5,8.3), xlim=c(558.5,610)) +
+  scale_y_continuous(breaks=c(5,6,7,8), expand=c(0,0))+
+  scale_x_continuous ( expand=c(0,0))+
+  guides(color="none") +
+  labs(x="Length (mm)") +
+  theme(plot.margin = margin(t=7,r=12,l=5,b=5))
+
+
+#aside: 05/25/22
+##intervals? where did this come from
+
+#pink... I have leads on this somewhere
+
+#p1.df.clean
+pink.egg.graph <- ggplot(p1.df.clean) + aes(x=Length..mm., y=Diameter..mm., color=Otolith.results) +
+    geom_point(alpha=0.5) + scale_color_manual(values=c("blue", "orange"))+
+    theme_cowplot() + 
+  guides(color="none")
+    #theme(legend.position = c(0.03, 0.94))+
+    #coord_cartesian(ylim=c(5,8.5)) +
+    #scale_y_continuous(breaks=c(5,6,7,8), expand=c(0,0)))
+
+sum.D <- summary(fit.p1.D)
+summary(fit.p1.C1.REML)
+
+fixef.p1 <-sum.D$coefficients
+
+#p1.clean.wild <- p1.clean %>% filter(Otolith.results == "no mark")
+#p1.clean.hatch <- p1.clean %>% filter(Otolith.results == "PORT ARMSTRONG")
+upper.p1 <- fixef.p1[1] + (1.96*fixef.p1[2])
+lower.p1 <- fixef.p1[1] - (1.96*fixef.p1[2])
+
+p1.eggs <- pink.egg.graph + geom_segment(y=fixef.p1[1], yend=fixef.p1[1], x= min(p1.clean$Length..mm.), xend=max(p1.clean$Length..mm.), color= "black", size=1.5)+
+  #now I just need them error bars
+  geom_segment(y=upper.p1, yend=upper.p1, x= min(p1.clean$Length..mm.), xend=max(p1.clean$Length..mm.), color="black", linetype="dashed") + #upper
+  geom_segment(y=lower.p1, yend=lower.p1, x= min(p1.clean$Length..mm.), xend=max(p1.clean$Length..mm.), color="black", linetype= "dashed") + #lower
+  labs(y="Egg diameter (mm)" , x="Length (mm)") +
+  coord_cartesian(xlim=c(395,480)) +scale_x_continuous (breaks=c(400,420,440,460,480), expand=c(0,0)) +
+  theme(plot.margin = margin(t=7,r=12,l=5,b=5))
+  
+#aside 05/25/22
+
+#pink 2021
+names(p2.df.clean)
+
+p2.egg.graph <- ggplot(p2.df.clean) + aes(x=Length.mm., y=Diameter, color=Oto.reading) +
+    geom_point(alpha=0.5) + scale_color_manual(values=c("blue", "orange"))+
+    theme_cowplot() + 
+  guides(color="none")
+
+wild.p2 <- fixef(fit.p2.lme.noint)[1]
+hatch.p2 <- fixef(fit.p2.lme.noint)[2]
+
+wild.subset.p2 <- p2.df.clean %>% filter(Oto.reading=="No Mark")
+hatch.subset.p2 <- p2.df.clean %>% filter(Oto.reading=="PORT ARMSTRONG")
+
+Intervals.p2 <- intervals(fit.p2.lme.noint)
+hatchlow<- Intervals.p2$fixed[2,1]
+hatchhigh <- Intervals.p2$fixed[2,3]
+wildlow <- Intervals.p2$fixed[1,1]
+wildhigh <- Intervals.p2$fixed[1,3]
+
+p2.eggs <-p2.egg.graph + geom_segment(y=wild.p2, yend=wild.p2, x= min(wild.subset.p2$Length.mm.), xend=max(hatch.subset.p2$Length.mm.), color= "blue", size=1.5) +  #wild+
+geom_segment(y=hatch.p2, yend=hatch.p2, x= min(hatch.subset.p2$Length.mm.), xend=max(hatch.subset.p2$Length.mm.), color= "orange", size=1.5)+ #hatch
+#now just need to add error bars
+  geom_segment(y= wildhigh,  yend=(wildhigh), x=  min(wild.subset.p2$Length.mm.), xend= max(wild.subset.p2$Length.mm.), color="black", linetype="dashed")+
+  geom_segment(y= wildlow,  yend=(wildlow), x=  min(wild.subset.p2$Length.mm.), xend= max(wild.subset.p2$Length.mm.), color="black", linetype="dashed") +
+  geom_segment(y= hatchlow,  yend=(hatchlow), x=  min(hatch.subset.p2$Length.mm.), xend= max(hatch.subset.p2$Length.mm.), color="black", linetype="dashed") +
+  geom_segment(y= hatchhigh,  yend=(hatchhigh), x=  min(hatch.subset.p2$Length.mm.), xend= max(hatch.subset.p2$Length.mm.), color="black", linetype="dashed") + 
+  labs(y= "Egg diameter (mm)",x="Length (mm)") +
+coord_cartesian(xlim=c(342,475), ylim=c(5,8)) +scale_x_continuous (breaks=c(350, 375,400,425,450, 475), expand=c(0,0)) +
+  scale_y_continuous(breaks=c(5,6,7,8), expand = c(0,0))+
+  theme(plot.margin = margin(t=7,r=12,l=5,b=5))
+
+library(patchwork)
+
+```
+
+
+Final russia egg graphs
+```{r}
+coho.eggs
+p1.eggs
+p2.eggs
+
+library(patchwork)
+library(cowplot)
+p1.eggs/p2.eggs/coho.eggs #i'd need to drop the axes to display them this way. I could split them up, too
+
+
+#05/24/22 FINAL PLOT for thesis draft
+##clean up these graph axes
+xlab <-coho.eggs$labels$x
+ylab <- coho.eggs$labels$y
+
+coho.eggs_nolabs <- coho.eggs + labs(x=element_blank(), y=element_blank())
+p1.eggs_nolabs <- p1.eggs + labs(x=element_blank(), y=element_blank())
+p2.eggs_nolabs <- p2.eggs + labs(x=element_blank(), y=element_blank())
+
+#nice. Now combine them?
+eggs_combined_draft <- plot_grid(p1.eggs_nolabs,p2.eggs_nolabs,coho.eggs_nolabs, scale=0.95, nrow=3) #ok, that looks good. Good job
+
+#now add axes labels
+##set it up first
+temp_egg <- plot_grid (NULL, eggs_combined_draft, ncol = 2, rel_widths =c(1,6))
+egg_base <- plot_grid(eggs_combined_draft, NULL, ncol = 1, rel_heights = c(9,1)) #might need to make this smaller a lil bit
+#and tehn actually add them labels
+plot_egg_final <- ggdraw(egg_base) + draw_label(xlab, x = 0.55, y = 0.11, size = 15) + 
+  draw_label ((ylab), angle= 90, x = 0.02, y = 0.6, size = 15) +
+  draw_label ("Even-year pink", x = 0.85, y = 0.98, fontfamily = "Arial", fontface="bold", size = 13) + draw_label ("Odd-year pink", x = 0.85, y = 0.67, fontfamily = "Arial", fontface="bold", size = 13) + draw_label ("Coho", fontfamily = "Arial", fontface="bold", size = 13, x = 0.85, y = 0.37) 
+
+plot_egg_final
+
+#now add plot labels (coho, odd-year pink, even-year pink) -> I did this above
+
+#test size and save plot
+##megan code:
+#dev.new (width = 6, height = 8, unit = "in", noRStudioGD = T); last_plot() #perfect
+#ggsave ("EGGS_COMBINED.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
+
+
+#future developments:
+##consider using geom_ribbon for the uncertainty instead of... whatever you used instead
+```
+
+
+Russia GSI graphs:
+
+```{r}
+#coho  #c.GSI.clean
+ggplot(c.GSI.clean) + aes(x=Length..mm., y=GSI, color=Wild.or.Hatch) + geom_point(size=3) +
+  geom_smooth(method="lm") + 
+  scale_color_manual(values =c("orange", "blue"))+
+  theme_cowplot()+
+  guides(color="none") +
+  labs(x="Length (mm)") +
+  coord_cartesian(ylim=c(13,30), xlim=c(559.5,610)) +scale_x_continuous (expand=c(0,0))+
+  scale_y_continuous(breaks=c(15, 20, 25, 30), expand=c(0,0)) +
+  theme(plot.margin = margin(t=7,r=12,l=5,b=5))
+
+#pink2020  #p1.clean
+ggplot(p1.clean) + geom_point(aes(x=Length..mm., y=GSI, color=Otolith.results), size=3)+
+  geom_smooth(aes(x=Length..mm., y=GSI), method = "lm", color="black") +
+  scale_color_manual(values=c("blue", "orange")) +
+  theme_cowplot() +
+  guides(color="none") +
+  labs(x="Length (mm)") +
+coord_cartesian(ylim=c(12.5,25.0), xlim=c(390,480))+ scale_x_continuous(breaks=c(400,420,440,460,480), expand=c(0,0))+
+  scale_y_continuous(breaks=c(15, 20, 25), expand=c(0,0)) +
+  theme(plot.margin= margin(t=7,r=12,l=5,b=5))
+#ggmarginal
+  
+
+#pink 2021
+max(p2.GSI.clean$GSI.1) #26.7
+min(p2.GSI.clean$GSI.1) #11.8
+max(p2.GSI.clean$Length.mm.) #462
+min(p2.GSI.clean$Length.mm.) #344
+ggplot(p2.GSI.clean) + geom_point(aes(x=Length.mm., y=GSI.1, color=Oto.reading), size=3)+
+  geom_smooth(aes(x=Length.mm., y=GSI.1), method = "lm", color="black") +
+  scale_color_manual(values=c("blue", "orange")) + #bc gatch is listed first here
+  theme_cowplot() + 
+  #guides(color="none") +
+  labs(y="GSI", x="Length (mm)")+
+  coord_cartesian(ylim=c(11.6,28.0), xlim=c(340,475))+  #might try max of 465 instead
+  scale_x_continuous(breaks=c(350,375,400,425,450,475), expand=c(0,0)) +  
+  scale_y_continuous(breaks = c(12, 16,20,24,28), expand=c(0,0))
+
+
+```
+
+Additions here: 021120
+Test lovers vs sashin for P2
+```{r}
+#GSI
+names(p2.GSI.clean)
+p2.GSI.clean$Location
+library(ggplot2)
+ggplot(p2.GSI.clean) + aes(y=GSI.1, x=Location, color=Oto.reading) +
+  geom_boxplot() +geom_jitter()
+ggplot(p2.GSI.clean) + aes(y=GSI.1, x=Location) +
+  geom_boxplot() +geom_jitter()
+
+#eggs
+names(p2.df.clean) 
+ggplot(p2.df.clean) +aes(y=Diameter, x=Location, color=Oto.reading) +
+  geom_boxplot()# +geom_jitter()
+
+ggplot(p2.df.clean) +aes(y=Diameter, x=Location) +
+  geom_boxplot() #+geom_jitter()
+
+#males
+####uh, is that in morpho?
+```
+
+
+Additions 05/19/22
+This is for a formal length analysis t-test, two-sided
+Just to show difference in coho length
+MAybe pink length too? Nah, just coho.
+Hmm. Guess cause I'm just looking at male length, I should move over to the morpho scriptfile.
+```{r}
+```
+
+
+Additions 05/24/22
+->date stuff? change date to jdate
+```{r}
+
+```
+
+
+05/24/22: use a likelihood ratio test for signficacne?? See megan emails
+Experimenting a bit here. NOPE. STICK WITH T TEST
+```{r}
+library(lmtest)
+#p1 (even-year pink)
+summary(fit.p1.C1.REML)
+#test the full model: fit.p1.C1.REML
+##vs. the resuced model: fit.p1.D
+summary(fit.p1.D)
+
+lrtest(fit.p1.C1.REML, fit.p1.D)
+anova(fit.p1.C1.REML, fit.p1.D) #are these the same?
+```
+
+
+05/25/22: clean them graphs
+```{r}
+#see work above under Russia
+
+#GSI. Copied from Russia graphs and now edited. I'll remove the labels. And... how to panel these? Three across? All stacked on top of each other?
+#coho  #c.GSI.clean
+ggGSI_coho <- ggplot(c.GSI.clean) + aes(x=Length..mm., y=GSI, color=Wild.or.Hatch) + geom_point(size=3) +
+  geom_smooth(method="lm") + 
+  scale_color_manual(values =c("orange", "blue"))+
+  theme_cowplot()+
+  guides(color="none") +
+  labs(x="Length (mm)") +
+  coord_cartesian(ylim=c(13,30), xlim=c(558.5,610)) +scale_x_continuous (breaks=c(500,550,600,650), expand=c(0,0))+
+  scale_y_continuous(breaks=c(15, 20, 25, 30), expand=c(0,0)) #+
+  #theme(plot.margin = margin(t=7,r=12,l=5,b=5))
+
+#pink2020  #p1.clean
+range(p1.clean$Length..mm.) # 397 476
+range(p1.clean$GSI) #14.43570 24.45902
+
+ggGSI_p20 <-ggplot(p1.clean) + geom_point(aes(x=Length..mm., y=GSI, color=Otolith.results), size=3)+
+  geom_smooth(aes(x=Length..mm., y=GSI), method = "lm", color="black") +
+  scale_color_manual(values=c("blue", "orange"), name=element_blank(), labels = c("Wild", "Hatchery")) +
+  theme_cowplot() +
+  #guides(color="none") +
+  labs(x="Length (mm)") +
+coord_cartesian(ylim=c(13.9,25.0), xlim=c(395,480))+ scale_x_continuous(breaks=c(400,420,440,460,480), expand=c(0,0))+
+  scale_y_continuous(breaks=c(15, 20, 25), expand=c(0,0)) + #for legend.poition, can ise x=0.85 istead of 0.05
+ theme(legend.position = c(0.02, 0.95), plot.margin= margin(t=7,r=12,l=5,b=5))  #, legend.box.background = element_rect(color="black", size=1), legend.box.margin = margin(2,1,2,1))
+#ggmarginal
+ #plot.margin= margin(t=7,r=12,l=5,b=5)
+  
+
+#pink 2021
+max(p2.GSI.clean$GSI.1) #26.7
+min(p2.GSI.clean$GSI.1) #11.8
+max(p2.GSI.clean$Length.mm.) #462
+min(p2.GSI.clean$Length.mm.) #344
+ggGSI_pODD<-ggplot(p2.GSI.clean) + geom_point(aes(x=Length.mm., y=GSI.1, color=Oto.reading), size=3)+
+  geom_smooth(aes(x=Length.mm., y=GSI.1), method = "lm", color="black") +
+  scale_color_manual(values=c("blue", "orange")) + #bc gatch is listed first here
+  theme_cowplot() + 
+  guides(color="none") + #ooh. How to move a legend into the frame
+  labs(y="GSI", x="Length (mm)")+
+  coord_cartesian(ylim=c(11.0,28.0), xlim=c(340,475))+  #might try max of 465 instead
+  scale_x_continuous(breaks=c(350,375,400,425,450,475), expand=c(0,0)) +  
+  scale_y_continuous(breaks = c(12, 20, 28), expand=c(0,0))
+
+
+#edits:
+ggGSI_p20_2 <- ggGSI_p20 + labs(x=element_blank(), y=element_blank())
+ggGSI_p21_2 <- ggGSI_pODD + labs(x=element_blank(), y=element_blank())
+ggGSI_c2 <- ggGSI_coho + labs(x=element_blank(), y=element_blank())
+
+
+#plot_grid
+library(cowplot)
+ggGSI_grid <- plot_grid(ggGSI_p20_2, ggGSI_p21_2, ggGSI_c2, scale=0.95, nrow=3) # I think let's go this way
+
+#set up 
+##set it up first
+temp_ggGSI <- plot_grid(NULL, ggGSI_grid, ncol = 2, rel_widths =c(1,6))
+ggGSI_base <- plot_grid(ggGSI_grid, NULL, ncol = 1, rel_heights = c(9,1)) 
+
+xlab_GSI <- ggGSI_coho$labels$x
+ylab_GSI <- ggGSI_coho$labels$y
+
+#for later: alter to use a non-smooth confidence interval??
+#and tehn actually add them labels
+plot_GSI_final <- ggdraw(ggGSI_base) + draw_label(xlab_GSI, x = 0.55, y = 0.11, size = 15) + 
+  draw_label ((ylab_GSI), angle= 90, x = 0.02, y = 0.6, size = 15) +
+  draw_label ("Even-year pink", x = 0.85, y = 0.98, fontfamily = "Arial", fontface="bold", size = 13) + draw_label ("Odd-year pink", x = 0.85, y = 0.67, fontfamily = "Arial", fontface="bold", size = 13) + draw_label ("Coho", fontfamily = "Arial", fontface="bold", size = 13, x = 0.85, y = 0.37) 
+
+plot_GSI_final
+
+#that could work. Might need to play around with dimensions
+dev.new (width = 6, height = 10, unit = "in", noRStudioGD = T); last_plot() #perfect
+#ggsave ("GSI_COMBINED2.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
+
+#nice! some minor adjustments needed. See the graph in the saved folder
+
+
+#07/13/22 REvisit. Fixing that legend.
+
+
+```
+
+
+07/13/22 REvisit. Fixing that GSI legend.
+```{r}
+#see work above under Russia
+
+#GSI. Copied from Russia graphs and now edited. I'll remove the labels. And... how to panel these? Three across? All stacked on top of each other?
+#coho  #c.GSI.clean
+ggGSI_coho <- ggplot(c.GSI.clean) + aes(x=Length..mm., y=GSI, color=Wild.or.Hatch) + geom_point(size=3) +
+  geom_smooth(method="lm") + 
+  scale_color_manual(values =c("orange", "blue"))+
+  theme_cowplot()+
+  guides(color="none") +
+  labs(x="Length (mm)") +
+  coord_cartesian(ylim=c(13,30), xlim=c(558,610)) +scale_x_continuous (expand=c(0,0))+
+  scale_y_continuous(breaks=c(15, 20, 25, 30), expand=c(0,0)) #+
+  #theme(plot.margin = margin(t=7,r=12,l=5,b=5))
+
+#pink2020  #p1.clean
+range(p1.clean$Length..mm.) # 397 476
+range(p1.clean$GSI) #14.43570 24.45902
+
+ggGSI_p20 <-ggplot(p1.clean) + geom_point(aes(x=Length..mm., y=GSI, color=Otolith.results), size=3)+
+  geom_smooth(aes(x=Length..mm., y=GSI), method = "lm", color="black") +
+  scale_color_manual(values=c("orange", "blue"), name=element_blank(), labels = c("Hatchery", "Wild"), limits=c("PORT ARMSTRONG", "no mark")) +
+  theme_cowplot() +
+  #guides(color="none") +
+  labs(x="Length (mm)") +
+coord_cartesian(ylim=c(13.9,25.0), xlim=c(395,480))+ scale_x_continuous(breaks=c(400,420,440,460,480), expand=c(0,0))+
+  scale_y_continuous(breaks=c(15, 20, 25), expand=c(0,0)) + #for legend.poition, can ise x=0.85 istead of 0.05
+ theme(legend.position = c(0.02, 0.90), plot.margin= margin(t=7,r=12,l=5,b=5))  +
+  theme(
+    legend.title=element_blank(),
+  legend.box.background = element_rect(),
+  legend.box.margin = margin(-5, 3, 2, 2) #yes, finally I made a box.
+) #this is looking ok. Note the negative number. This is where I'm adjusting the LEGEND POSITION. needs to adjust a tad down
+
+  
+
+#pink 2021
+max(p2.GSI.clean$GSI.1) #26.7
+min(p2.GSI.clean$GSI.1) #11.8
+max(p2.GSI.clean$Length.mm.) #462
+min(p2.GSI.clean$Length.mm.) #344
+ggGSI_pODD<-ggplot(p2.GSI.clean) + geom_point(aes(x=Length.mm., y=GSI.1, color=Oto.reading), size=3)+
+  geom_smooth(aes(x=Length.mm., y=GSI.1), method = "lm", color="black") +
+  scale_color_manual(values=c("blue", "orange")) + #bc gatch is listed first here
+  theme_cowplot() + 
+  guides(color="none") + #ooh. How to move a legend into the frame
+  labs(y="GSI", x="Length (mm)")+
+  coord_cartesian(ylim=c(11.0,28.0), xlim=c(340,475))+  #might try max of 465 instead
+  scale_x_continuous(breaks=c(350,375,400,425,450,475), expand=c(0,0)) +  
+  scale_y_continuous(breaks = c(12, 20, 28), expand=c(0,0))
+
+
+#edits:
+ggGSI_p20_2 <- ggGSI_p20 + labs(x=element_blank(), y=element_blank())
+ggGSI_p21_2 <- ggGSI_pODD + labs(x=element_blank(), y=element_blank())
+ggGSI_c2 <- ggGSI_coho + labs(x=element_blank(), y=element_blank())
+
+
+#plot_grid
+library(cowplot)
+ggGSI_grid <- plot_grid(ggGSI_p20_2, ggGSI_p21_2, ggGSI_c2, scale=0.95, nrow=3) # I think let's go this way
+
+#set up 
+##set it up first
+temp_ggGSI <- plot_grid(NULL, ggGSI_grid, ncol = 2, rel_widths =c(1,6))
+ggGSI_base <- plot_grid(ggGSI_grid, NULL, ncol = 1, rel_heights = c(9,1)) 
+
+xlab_GSI <- ggGSI_coho$labels$x
+ylab_GSI <- ggGSI_coho$labels$y
+
+#for later: alter to use a non-smooth confidence interval??
+#and tehn actually add them labels
+plot_GSI_final <- ggdraw(ggGSI_base) + draw_label(xlab_GSI, x = 0.55, y = 0.11, size = 15) + 
+  draw_label ((ylab_GSI), angle= 90, x = 0.02, y = 0.6, size = 15) +
+  draw_label ("Even-year pink", x = 0.85, y = 0.98, fontfamily = "Arial", fontface="bold", size = 13) + draw_label ("Odd-year pink", x = 0.85, y = 0.67, fontfamily = "Arial", fontface="bold", size = 13) + draw_label ("Coho", fontfamily = "Arial", fontface="bold", size = 13, x = 0.85, y = 0.37) 
+
+plot_GSI_final
+
+#that could work. Might need to play around with dimensions
+#dev.new (width = 6, height = 10, unit = "in", noRStudioGD = T); last_plot() #perfect
+#ggsave ("GSI_COMBINED5.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off() #moved box down a tad
+
+```
+
+
+All right. Back to messing with plots
+23 August 2022
+Combine GSI plot with egg plot
+```{r}
+#longcut
+gg_GSI_Egg_grid <- ggGSI_grid <- plot_grid(ggGSI_p20_2, ggGSI_p21_2, ggGSI_c2, scale=0.95, nrow=3) 
+
+
+#shortcut
+#can I just combine plot_egg_final and plot_GSI_final??
+library(patchwork)
+design2 <- "
+111111#22222222
+111111#22222222
+111111#22222222
+"
+#need to run this OUUTSIDE OF CODE CHUNK!!
+
+
+plot_GSI_final + plot_egg_final# + plot_layout(design=design2) #that actually looked lie it worked. Like, pretty damn well. Might have to mess with labels and legend tho.
+
+#size 8.5 by 11 works fairly well, but not with labels
+#try size... 9.5 by 11?
+#I like 10 by 11 the best I think
+
+plot_GSI_final + plot_egg_final + plot_layout(design=design2)
+#8 by 10 works decent with design 2 spacing
+
+#dev.new (width = 10, height = 8, unit = "in", noRStudioGD = T); last_plot() #perfect
+#ggsave ("GSI_Eggs_combined1.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
+
+```
+Lenght test, in the subsetted coho world
+```{r}
+c.GSI.dat_2 <- c.GSI.dat %>% filter(Length..mm.>= 559&Length..mm.<=608)
+c.GSI.clean_length <- c.GSI.dat_2 %>% filter (Weird == "n")
+
+c.GSI_hatch_Ltest <- c.GSI.clean_length%>% filter(Wild.or.Hatch=="hatchery")
+c.GSI_wild_Ltest <- c.GSI.clean_length  %>% filter(Wild.or.Hatch=="wild")
+
+
+t.test(c.GSI_hatch_Ltest$Length..mm., c.GSI_wild_Ltest$Length..mm., alternative = "two.sided", var.equal=T) 
+##t = 4.1877, df = 59, p-value = 9.531e-05 for all values (c.GSI.dat base)
+##t = 4.326, df = 53, p-value = 6.747e-05 #when werid are removed
+
+sd(c.GSI_hatch_Ltest$Length..mm.)
+sd(c.GSI_wild_Ltest$Length..mm.)
+#length(c.GSI.dat$Wild.or.Hatch)
+#length(c.GSI.dat)
+```
+

@@ -14,11 +14,10 @@ Morpho_yr1_pinkcoho.Rmd has been revised and Qc'ed, but where'd I make the final
 Morpho_yr2_pink is done.
 
 
-
-Female GSI:
-
-Egg size:
-
+Female GSI and eggs:
+GSI_eggs_allpink_coho.Rmd contains the pink 2020, pink 2021, and coho full dataset analysis
+GSI_eggs_allpink_coho_SUB.Rmd contains the pink 2020, pink 2021, and coho sub dataset analysis
+--> this latter Rmd is used for the primary results reporting, where we subsetted our coho. Make sure to clear the environment before running, and don't jump back and forth between the two Rmd's while running code. This is because in the coho analysis, things have the same names in the two Rmd's but reference different datasets (coho full dataset vs. coho sub dataset)
 
 
 Bomb calorimetry and lipid analysis:
