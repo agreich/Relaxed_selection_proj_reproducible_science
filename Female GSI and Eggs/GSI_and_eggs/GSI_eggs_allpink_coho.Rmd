@@ -255,56 +255,16 @@ hist(p2.GSI.clean.relevant$GSI.1)
 
 ```
 
-Quick aside to create a csv for my GSI
-```{r}
-
-```
-
 
 EGGS
-(ok how to go about this...) There's some complex data wrangling and I need to make sure I copy it over correctly. And the mixed effect model as well.
-(might be easiest to start backwards)
-
 P1 Eggs
 ```{r}
-
-
-
-```
-
-
-P2 Eggs
-```{r}
-#prepping data
-
-
-
-#global model (mixed)
-
-#reml to select mixed effects
-
-#ml to select
-
-
-#model selection
-##(and fit to model without intercept for the standard errors)
-
-
-
-
-
-
-```
-
-
-P1 Eggs
-```{r}
-p1.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs Revisted Yr1/P1.egg.diameters.csv")
+p1.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/P1.egg.diameters.csv")
 names(p1.all.eggs)
 head(p1.all.eggs)
 
 #the other pink even data
-p1.other.data<- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs Revisted Yr1/FemalePinkGSIotodataadd1_without_gaps copy.csv")
+p1.other.data<- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/FemalePinkGSIotodataadd1_without_gaps copy.csv")
 p1.other.data$Fish.ID <- p1.other.data$ID
 
 #extract the oto result...or Join by the ID!!!!
