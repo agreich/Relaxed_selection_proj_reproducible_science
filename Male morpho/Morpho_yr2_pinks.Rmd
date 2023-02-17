@@ -1098,5 +1098,8 @@ summary(mod.p2021.snout_log)
 summary(Snout_global_pinkodd_julian)
 summary(Depth_global_pinkodd_julian)
 ```
-
+Write csv
+```{r}
+write.csv(p2.males1, "p2.males1.csv")
+```
 

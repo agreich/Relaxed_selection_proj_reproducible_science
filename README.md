@@ -13,6 +13,8 @@ Morpho_yr1_pinkcoho.Rmd has been revised and Qc'ed, but where'd I make the final
 
 Morpho_yr2_pink is done.
 
+the "Simply.graphing.R" file is associated with the morphometrics graphs. The csv's for this file are created in Morpho_yr1_pinkcoho.Rmd and Morpho_yr2_pinks.Rmd. I wrote csv's for these so that Simply.graphing.R can now be run alone.
+
 
 Female GSI and eggs:
 GSI_eggs_allpink_coho.Rmd contains the pink 2020, pink 2021, and coho full dataset analysis

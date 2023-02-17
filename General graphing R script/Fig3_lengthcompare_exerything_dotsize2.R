@@ -141,8 +141,8 @@ length_boxplot_base <-(even_male_boxplot+even_female_boxplot)/(odd_male_boxplot+
 
 length_boxplot_base
 dev.new (width = 8, height = 8, unit = "in", noRStudioGD = T); last_plot() #perfect
-ggsave ("FIG3_LENGTH_dotsize2.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
-dev.off()
+#ggsave ("FIG3_LENGTH_dotsize2.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
+#dev.off()
 
 ###ALL BELOW IS NOT SO RELEVANT I THINK
 

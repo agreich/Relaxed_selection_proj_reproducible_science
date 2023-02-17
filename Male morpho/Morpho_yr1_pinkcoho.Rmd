@@ -108,6 +108,7 @@ summary(pca.no56)
 df.pink2 <- as.data.frame(pca.no56$x[,1:3])
 class(df.pink2) 
 
+
 #ok, need to add river column based on origin
 #probaly an easier way to do this, but:
 #trying to make a vector of length 180 first...
@@ -128,6 +129,7 @@ head(df.pink2)
 df.pink2$Wild.or.hatch <- Wild.or.hatch2
 df.pink2$ID <- specID2 #GO BACK AND LOOK AT FISH PHOTOTS
 head(df.pink2)
+
 
 
 
@@ -1003,6 +1005,7 @@ df.pink2
 #df.pink2$Wild.or.hatch <- Wild.or.hatch2
 
 
+
 #ADD ANOVA HERE
 
 #first separate wild and hatchery
@@ -1079,6 +1082,8 @@ for (i in (1:length(order_p))){
 depth_no_56 <- depth_p_ord[-55]
 
 df.pink2$depth <- depth_no_56
+
+write.csv(df.pink2, "df.pink2.csv")
 
 
 ```
@@ -1545,5 +1550,8 @@ how_many_hatch <- df.coho.long %>% filter(Wild.or.hatch=="W")
 length(how_many_hatch$Wild.or.hatch)
 #df.coho.long%>% filter(Wild.or.hatch=="W"))
 ```
-
+write csv for the simply graphing.R
+```{r}
+write.csv(df.coho.long2, "df.coho.long2.csv")
+```
 
