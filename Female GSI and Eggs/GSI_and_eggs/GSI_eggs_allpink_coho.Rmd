@@ -453,8 +453,9 @@ summary(fit.p2.lme.noint)
 Coho Eggs
 ```{r}
 #prepping data. And get rid of them NA's!
-c.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/coho.egg.diameters.csv")
-c.all.other.stuff <- read.csv("./DATA/MASTERFemaleCohoQCwitheggs_copy.csv")
+setwd("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA")
+c.all.eggs <- read.csv("coho.egg.diameters.csv")
+c.all.other.stuff <- read.csv("MASTERFemaleCohoQCwitheggs_copy.csv")
 
 names(c.all.eggs)
 names(c.all.other.stuff)
@@ -939,13 +940,6 @@ Hmm. Guess cause I'm just looking at male length, I should move over to the morp
 ```
 
 
-Additions 05/24/22
-->date stuff? change date to jdate
-```{r}
-
-```
-
-
 05/24/22: use a likelihood ratio test for signficacne?? See megan emails
 Experimenting a bit here. NOPE. STICK WITH T TEST
 ```{r}
@@ -1248,7 +1242,8 @@ ggplot(c.GSI.clean) + aes(x=Length..mm., y=Wild.or.Hatch, color=Wild.or.Hatch) +
 
 dev.new (width = 7, height = 4, unit = "in", noRStudioGD = T); last_plot() #perfect
 
-#ggsave("Length_compared_femalecoho.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
+setwd("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/Figs")
+ggsave("Length_compared_femalecoho.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
 ```
 
 
