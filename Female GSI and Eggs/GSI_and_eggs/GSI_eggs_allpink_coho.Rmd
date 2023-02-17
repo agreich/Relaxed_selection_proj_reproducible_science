@@ -330,10 +330,10 @@ summary(fit.p1.D)
 
 ```
 
-P2 Eggs: QC IN PROGRESS
+P2 Eggs
 ```{r}
 #load in them datas
-p2.GSI <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Fish/Female.p2.Rdata.3.csv")
+p2.GSI <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Female.p2.Rdata.3.csv")
 names(p2.GSI)
 
 library(dplyr)
@@ -356,7 +356,7 @@ GSI.nogreen <- GSI.data.4 %>% filter(Weird == "n")
 
 
 #pink odd (p2)###########################
-p2.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs/Results.p2.ImageJ.eggs.csv")
+p2.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Results.p2.ImageJ.eggs.csv")
 library(tidyverse)
 df.hold <- data.frame(unique(p2.all.eggs$Label))
 #I manually added in the photo ID's. They are under "Label" in both of the dataframes
@@ -453,8 +453,8 @@ summary(fit.p2.lme.noint)
 Coho Eggs
 ```{r}
 #prepping data. And get rid of them NA's!
-c.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs Revisted Yr1/coho.egg.diameters.csv")
-c.all.other.stuff <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs Revisted Yr1/MASTERFemaleCohoQCwitheggs_copy.csv")
+c.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/coho.egg.diameters.csv")
+c.all.other.stuff <- read.csv("./DATA/MASTERFemaleCohoQCwitheggs_copy.csv")
 
 names(c.all.eggs)
 names(c.all.other.stuff)
