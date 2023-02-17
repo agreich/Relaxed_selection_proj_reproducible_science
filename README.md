@@ -11,11 +11,15 @@ Apologies in advance. My code is a bit meandering. I learned how to code and use
 Male morphometrics:
 Morpho_yr1_pinkcoho.Rmd has been revised and Qc'ed, but where'd I make the final project graphs?? Might be in the "simply graphing" R document
 
-Morpho_yr2_pink.Rmd is next.
+Morpho_yr2_pink is done.
+
+
 
 Female GSI:
 
 Egg size:
+
+
 
 Bomb calorimetry and lipid analysis:
 The "Bomb_notebook copy.Rmd" has the full female coho dataset
