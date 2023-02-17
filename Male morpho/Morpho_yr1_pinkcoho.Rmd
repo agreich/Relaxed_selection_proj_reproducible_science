@@ -1553,5 +1553,6 @@ length(how_many_hatch$Wild.or.hatch)
 write csv for the simply graphing.R
 ```{r}
 write.csv(df.coho.long2, "df.coho.long2.csv")
+write.csv(df.coho, "df.coho.csv")
 ```
 
