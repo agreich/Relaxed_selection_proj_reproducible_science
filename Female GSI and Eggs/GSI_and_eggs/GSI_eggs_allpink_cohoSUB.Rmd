@@ -36,18 +36,12 @@ library(lmerTest)
 PINK YEAR 1: Females
 LOAD DATAS
 ```{r}
-p1 <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs Revisted Yr1/FemalePinkGSIotodataadd1_without_gaps copy.csv")
+p1 <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/FemalePinkGSIotodataadd1_without_gaps copy.csv")
 
 #prep GSI
 p1$GSI <- (p1$Total.Egg.Mass.g./p1$Fish.Weight..g.) *100
 p1.clean <- p1 %>% filter(Weird == "n", Otolith.results != "unknown") #getting rid of weird and unknown
 
-
-#p1$GSI <- (p1$Total.Egg.Mass.g./p1$Fish.Weight..g.) *100
-#p1.clean <- na.omit(p1) %>% filter(Weird == "n", Otolith.results != "unknown")
-#p1.GSI.mod <- aov(GSI ~ Otolith.results, data = p1.clean)
-#summary(p1.GSI.mod) ##THIS ONE
-#summary.lm(p1.GSI.mod)
 
 p1.wild.GSI.ttest <- p1.clean %>% filter(Otolith.results == "no mark")
 p1.hatch.GSI.ttest <- p1.clean %>% filter(Otolith.results == "PORT ARMSTRONG")
@@ -89,7 +83,7 @@ summary(mod_p1_length)
 
 PINK Y2 GSI
 ```{r}
-p2.GSI <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Fish/Female.p2.Rdata.3.csv")
+p2.GSI <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Female.p2.Rdata.3.csv")
 names(p2.GSI)
 
 p2.GSI <- p2.GSI %>%
@@ -141,7 +135,7 @@ bf.test(GSI.1 ~ Oto.reading, p2.GSI.clean.relevant) #says variance is equal
 #test for date significance
 #and maybe location significance
 write.csv(p2.GSI.clean, "p2.GSI.clean.csv") #made this a csv. Now goitn in to edit the date, new date column with early, middle , late in the run
-p2_GSI_clean_date_alt <- read.csv("p2.GSI.clean_altdate.csv")
+p2_GSI_clean_date_alt <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/p2.GSI.clean_altdate.csv")
 
 names(p2_GSI_clean_date_alt)
 aov.p2.GSI_global <- lm(GSI.1 ~ Oto.reading + Date_alt, p2_GSI_clean_date_alt)
@@ -167,14 +161,9 @@ summary(aov.p2.GSI_global) #not sig at ALLL. Date is not signficant.
 ```
 
 
-```{r}
-
-```
-
-
 COHO year 1: GSI SUBSETTED
 ```{r}
-c.GSI.dat <-read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs Revisted Yr1/MASTERFemaleCohoQCwitheggs_copy.csv")
+c.GSI.dat <-read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/MASTERFemaleCohoQCwitheggs_copy.csv")
 c.GSI.dat$GSI <- (c.GSI.dat$Total.Egg.Mass.g./c.GSI.dat$Fish.Weight..g.)*100
 
 
@@ -227,26 +216,18 @@ hist(p2.GSI.clean.relevant$GSI.1)
 
 ```
 
-Quick aside to create a csv for my GSI
-```{r}
-
-```
 
 
 EGGS
-(ok how to go about this...) There's some complex data wrangling and I need to make sure I copy it over correctly. And the mixed effect model as well.
-(might be easiest to start backwards)
-
-
 
 P1 Eggs
 ```{r}
-p1.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs Revisted Yr1/P1.egg.diameters.csv")
+p1.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/P1.egg.diameters.csv")
 names(p1.all.eggs)
 head(p1.all.eggs)
 
 #the other pink even data
-p1.other.data<- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs Revisted Yr1/FemalePinkGSIotodataadd1_without_gaps copy.csv")
+p1.other.data<- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/FemalePinkGSIotodataadd1_without_gaps copy.csv")
 p1.other.data$Fish.ID <- p1.other.data$ID
 
 #extract the oto result...or Join by the ID!!!!
@@ -312,10 +293,10 @@ summary(fit.p1.D)
 
 ```
 
-P2 Eggs: QC IN PROGRESS
+P2 Eggs:
 ```{r}
 #load in them datas
-p2.GSI <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Fish/Female.p2.Rdata.3.csv")
+p2.GSI <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Female.p2.Rdata.3.csv")
 names(p2.GSI)
 
 library(dplyr)
@@ -338,7 +319,7 @@ GSI.nogreen <- GSI.data.4 %>% filter(Weird == "n")
 
 
 #pink odd (p2)###########################
-p2.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs/Results.p2.ImageJ.eggs.csv")
+p2.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Results.p2.ImageJ.eggs.csv")
 library(tidyverse)
 df.hold <- data.frame(unique(p2.all.eggs$Label))
 #I manually added in the photo ID's. They are under "Label" in both of the dataframes
@@ -398,7 +379,7 @@ fit.p2.B5.ml <-lmer(Diameter ~ 1 + (1|ID), data=p2.df.clean, REML=F)
 
 AIC(fit.p2.B.ml, fit.p2.B3.ml, fit.p2.B4.ml, fit.p2.alpha, fit.p2.B5.ml, fit.p2.Julian, fit.p2.Julian2) #fit.p2.B4.ml wins
 #update 05/24/22. Fuck, Julian2 date is my best mod. Wait... nno it's not. B4 is better, actually, because it's simpler and within 1 AIC point. So no Julian date needed in this analysis. #NO JULIAN DATE NEEDED. JULIAN DATE DISPROVED. Seemed to have a small effect, but not below the signficance threshhold AND AIC didnt identify it as importatn. WOOO.
-BIC(fit.p2.B.ml, fit.p2.B3.ml, fit.p2.B4.ml, fit.p2.alpha, fit.p2.B5.ml, fir.p2.Julian)
+BIC(fit.p2.B.ml, fit.p2.B3.ml, fit.p2.B4.ml, fit.p2.alpha, fit.p2.B5.ml, fit.p2.Julian)
 
 
 ##TANGENT - DISPROVED ABOVE!
@@ -435,8 +416,9 @@ summary(fit.p2.lme.noint)
 Coho Eggs
 ```{r}
 #prepping data. And get rid of them NA's!
-c.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs Revisted Yr1/coho.egg.diameters.csv")
-c.all.other.stuff <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Field Data Year 2/Eggs Revisted Yr1/MASTERFemaleCohoQCwitheggs_copy.csv")
+setwd("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA")
+c.all.eggs <- read.csv("coho.egg.diameters.csv")
+c.all.other.stuff <- read.csv("MASTERFemaleCohoQCwitheggs_copy.csv")
 
 names(c.all.eggs)
 names(c.all.other.stuff)
@@ -700,10 +682,8 @@ Figures , focus on the figures
 See the morpho coho  for the morpho graphs. "Morpho112221.RMD" in the MORPHO  IN ACTION folder.
 
 
-RUSSIA AMMENDMENTS
-FUCKED UP STUFF, dont use this block
+Updated Eggg graph, good, use this block, RUSSIA
 ```{r}
-
 #coho
 #what's the min and max for hatchery and wild lengths?
 hatch.temp <- coho.clean %>% filter(Wild.or.Hatch=="hatchery")
@@ -714,55 +694,6 @@ hmax.length <- max(hatch.temp$Length..mm.)
 wmin.length <- min(wild.temp$Length..mm.)
 wmax.length <- max(wild.temp$Length..mm.)
 
-coho.egg.graph + 
-  geom_ribbon(aes(ymin=Intervals$fixed[1,1], ymax=Intervals$fixed[1,3]), color="grey", alpha=0.3) + 
-  geom_ribbon(aes(ymin= Intervals$fixed[2,1],  ymax=(Intervals$fixed[2,3]), xmin= wmin.length, xmax=wmax.length), color="grey", alpha=0.3)+ #wild
-  geom_segment(y = cf.fix[1], yend = cf.fix[1], color="orange", size=1.5, x= hmin.length, xend = hmax.length ) + geom_segment(y = cf.fix[2], yend= cf.fix[2], color="blue", size=1.5, x= wmin.length, xend = wmax.length )+
-  coord_cartesian(ylim=c(5,8.3)) +
-  scale_y_continuous(breaks=c(5,6,7,8), expand=c(0,0)) 
-
-#try geom_bar or #geom_polygon
-coho.egg.graph + 
-  geom_polygon(aes(y=c(Intervals$fixed[1,1], Intervals$fixed[1,3])), color="grey", alpha=0.3) + 
-  geom_polygon(aes(y=c(Intervals$fixed[2,1],Intervals$fixed[2,3])), color="grey", alpha=0.3)+ #wild
-  geom_segment(y = cf.fix[1], yend = cf.fix[1], color="orange", size=1.5, x= hmin.length, xend = hmax.length ) + geom_segment(y = cf.fix[2], yend= cf.fix[2], color="blue", size=1.5, x= wmin.length, xend = wmax.length )+
-  coord_cartesian(ylim=c(5,8.3)) +
-  scale_y_continuous(breaks=c(5,6,7,8), expand=c(0,0)) 
-
-
-###
-coho.egg.graph + 
-  geom_ribbon(aes(ymin=Intervals$fixed[1,1], ymax=Intervals$fixed[1,3]), color="grey", alpha=0.3) + 
-  geom_ribbon(aes(ymin= Intervals$fixed[2,1],  ymax=(Intervals$fixed[2,3]), x = coho.clean$Length..mm. ), color="grey", alpha=0.3)+ #wild
-  geom_segment(y = cf.fix[1], yend = cf.fix[1], color="orange", size=1.5, x= hmin.length, xend = hmax.length ) + geom_segment(y = cf.fix[2], yend= cf.fix[2], color="blue", size=1.5, x= wmin.length, xend = wmax.length )+
-  coord_cartesian(ylim=c(5,8.3)) +
-  scale_y_continuous(breaks=c(5,6,7,8), expand=c(0,0)) 
-
-
-coho.egg.graph + 
-  geom_area(aes(ymin=Intervals$fixed[1,1], ymax=Intervals$fixed[1,3]), color="grey", alpha=0.3) + 
-  geom_ribbon(aes(ymin= Intervals$fixed[2,1],  ymax=(Intervals$fixed[2,3])), color="grey", alpha=0.3)+ #wild
-  geom_segment(y = cf.fix[1], yend = cf.fix[1], color="orange", size=1.5, x= hmin.length, xend = hmax.length ) + geom_segment(y = cf.fix[2], yend= cf.fix[2], color="blue", size=1.5, x= wmin.length, xend = wmax.length )+
-  coord_cartesian(ylim=c(5,8.3)) +
-  scale_y_continuous(breaks=c(5,6,7,8), expand=c(0,0)) 
-
-
-##
-coho.egg.graph + 
-  geom_segment(y=Intervals$fixed[1,1], yend=Intervals$fixed[1,1], color="black", x=hmin.length, xend=hmax.length) +
-  geom_segment(y=Intervals$fixed[1,3], yend=Intervals$fixed[1,3], color="black", x=hmin.length, xend=hmax.length) +
-#hatch
-  geom_segment(y= Intervals$fixed[2,1],  yend=(Intervals$fixed[2,1]), x= wmin.length, xend=wmax.length, color="black")+ 
-    geom_segment(y= Intervals$fixed[2,3],  yend=(Intervals$fixed[2,3]), x= wmin.length, xend=wmax.length, color="black")+ 
-  #wild
-  geom_segment(y = cf.fix[1], yend = cf.fix[1], color="orange", size=1.5, x= hmin.length, xend = hmax.length ) + geom_segment(y = cf.fix[2], yend= cf.fix[2], color="blue", size=1.5, x= wmin.length, xend = wmax.length )+
-  coord_cartesian(ylim=c(5,8.3)) +
-  scale_y_continuous(breaks=c(5,6,7,8), expand=c(0,0))
-
-```
-
-Updated Eggg graph, good, use this block, RUSSIA
-```{r}
 #coho
 coho.eggs <- coho.egg.graph + 
   geom_segment(y=Intervals$fixed[1,1], yend=Intervals$fixed[1,1], color="black", x=hmin.length, xend=hmax.length, linetype="dashed") +
@@ -967,21 +898,6 @@ ggplot(p2.df.clean) +aes(y=Diameter, x=Location) +
 ####uh, is that in morpho?
 ```
 
-
-Additions 05/19/22
-This is for a formal length analysis t-test, two-sided
-Just to show difference in coho length
-MAybe pink length too? Nah, just coho.
-Hmm. Guess cause I'm just looking at male length, I should move over to the morpho scriptfile.
-```{r}
-```
-
-
-Additions 05/24/22
-->date stuff? change date to jdate
-```{r}
-
-```
 
 
 05/24/22: use a likelihood ratio test for signficacne?? See megan emails
@@ -1201,8 +1117,9 @@ plot_GSI_final + plot_egg_final# + plot_layout(design=design2) #that actually lo
 plot_GSI_final + plot_egg_final + plot_layout(design=design2)
 #8 by 10 works decent with design 2 spacing
 
-#dev.new (width = 10, height = 8, unit = "in", noRStudioGD = T); last_plot() #perfect
-#ggsave ("GSI_Eggs_combined1.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
+setwd("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/Figs")
+dev.new (width = 10, height = 8, unit = "in", noRStudioGD = T); last_plot() #perfect
+ggsave ("GSI_Eggs_combined1_cohosub.jpg", width = dev.size()[1], height = dev.size()[2]); dev.off()
 
 ```
 Lenght test, in the subsetted coho world
