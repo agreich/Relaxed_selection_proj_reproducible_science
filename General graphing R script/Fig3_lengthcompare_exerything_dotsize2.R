@@ -178,3 +178,10 @@ t.test(odd_male_pink_clean$Length.mm., even_male_pink$Length..mm.)
 #sig that even is larger
 t.test(odd_female_pink_clean$Length.mm., even_female_pink_clean$Length..mm.)
 #t.test that even is larger
+
+
+#sample sizes
+W <- c.GSI.clean %>% filter(Wild.or.Hatch=="wild")
+H <- c.GSI.clean %>% filter(Wild.or.Hatch=="hatchery")
+length(W$ID)
+length(H$ID)

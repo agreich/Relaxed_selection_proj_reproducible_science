@@ -9,6 +9,7 @@ Bomb_df <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of G
 
 names(Bomb_df)
 library(tidyverse)
+library(dplyr)
 #View(Bomb_df)
 ```
 
@@ -38,11 +39,11 @@ library(dplyr)
 names(Bomb_df)
 Wild_egg_energy <- Bomb_df %>% 
   filter(Wild_or_hatch == "W") %>%
-  select(BombED.Dry.)
+  dplyr::select(BombED.Dry.)
     
 Hatch_egg_energy <- Bomb_df %>% 
   filter(Wild_or_hatch == "H") %>%
-  select(BombED.Dry.)
+  dplyr::select(BombED.Dry.)
 
 (T_test_ED <- t.test(Hatch_egg_energy, Wild_egg_energy, alternative="less", var.equal = T) )
 ##HA: x has a lower mean than y

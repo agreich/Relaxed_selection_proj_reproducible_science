@@ -38,11 +38,11 @@ library(dplyr)
 names(Bomb_df)
 Wild_egg_energy <- Bomb_df %>% 
   filter(Wild_or_hatch == "W") %>%
-  select(BombED.Dry.)
+  dplyr::select(BombED.Dry.)
     
 Hatch_egg_energy <- Bomb_df %>% 
   filter(Wild_or_hatch == "H") %>%
-  select(BombED.Dry.)
+  dplyr::select(BombED.Dry.)
 
 (T_test_ED <- t.test(Hatch_egg_energy, Wild_egg_energy, alternative="less", var.equal = T) )
 ##HA: x has a lower mean than y
@@ -57,11 +57,11 @@ t.test(Hatch_egg_energy, Wild_egg_energy, alternative="less", var.equal = F)
 #lipid
 Wild_lipid_energy <- Bomb_df %>% 
   filter(Wild_or_hatch == "W") %>%
-  select(X..lipid)
+  dplyr::select(X..lipid)
     
 Hatch_lipid_energy <- Bomb_df %>% 
   filter(Wild_or_hatch == "H") %>%
-  select(X..lipid)
+  dplyr::select(X..lipid)
 
 (T_test_lipid <- t.test(Hatch_lipid_energy, Wild_lipid_energy, alternative="less", var.equal = T))
 
@@ -69,6 +69,9 @@ Hatch_lipid_energy <- Bomb_df %>%
 #standard error
 T_test_ED$stderr
 T_test_lipid$stderr
+
+#sample sizes
+
 
 
 #I should probably record these t-test values in the resutls section. My results section is a work in progress...
@@ -197,15 +200,19 @@ library(dplyr)
 names(Bomb_df)
 Wild_egg_energy <- Bomb_df %>% 
   filter(Wild_or_hatch == "W") %>%
-  select(BombED.Dry.)
+  dplyr::select(BombED.Dry.)
     
 Hatch_egg_energy <- Bomb_df %>% 
   filter(Wild_or_hatch == "H") %>%
-  select(BombED.Dry.)
+  dplyr::select(BombED.Dry.)
 
 (T_test_ED <- t.test(Hatch_egg_energy, Wild_egg_energy, alternative="less", var.equal = T) )
 ##HA: x has a lower mean than y
 ##assuming homogeneity (constant variance... Is this true tho?)
+
+#sample sizes
+length(Hatch_egg_energy$BombED.Dry.)
+length(Wild_egg_energy$BombED.Dry.)
 
 t.test(Hatch_egg_energy, Wild_egg_energy, alternative="less", var.equal = F) 
 ##HA: x has a lower mean than y
