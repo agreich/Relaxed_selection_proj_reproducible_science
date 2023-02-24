@@ -774,7 +774,12 @@ hatch_SL<- hatch_S$snoutL
 #we predict that
 t.SL.coho.l <- t.test(x=hatch_SL, y=wild_SL, alternative= "less", var.equal=T)
 #t.SH.coho <- t.test(x=hatch_eggs_pink, y=wild_eggs_pink, alternative= "less")
-t.SL.coho.l
+t.SL.coho.l ##RESULT
+
+#what's our sample sizes?
+length(hatch_SL)
+length(wild_SL)
+
 
 #revisit 10/25/21
 #t.test(x=hatch_SL, y=wild_SL, alternative= "two.sided")
@@ -817,10 +822,15 @@ snout_df$Wild.or.hatch <- Wild.or.hatch.d #woohoo, right #'s, no doubles
 wild_S <-  snout_df %>% filter(Wild.or.hatch=="W")
 hatch_S <-  snout_df %>% filter(Wild.or.hatch=="H")
 
+
 wild_SL <- wild_S$snoutL
 wild_SH <- wild_S$snoutH
 hatch_SL<- hatch_S$snoutL
 hatch_SH <- hatch_S$snoutH
+
+#find sample sizes:
+length(wild_SL)
+length(hatch_SL)
 
 #now t-test
 #we predict that
@@ -1028,6 +1038,10 @@ sd(wild_S.p$snout)
 names(wild_S.p)
 sd(hatch_S.p$depth)
 sd(wild_S.p$depth)
+
+#find sample size:
+length(hatch_S.p$depth)
+length(wild_S.p$depth)
 
 #test assumptions
 #plot(fit.p, type = "diagnostics", outliers = TRUE) 
