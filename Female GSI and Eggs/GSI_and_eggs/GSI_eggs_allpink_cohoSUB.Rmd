@@ -79,6 +79,10 @@ sd_p1_h <- sd(p1.hatch.GSI.ttest$GSI) #excellent. Now do the GSI graphs
 mod_p1_length <- lm(GSI~Otolith.results + Length..mm., p1.clean)
 summary(mod_p1_length)
 
+#sample sizes
+length(p1.wild.GSI.ttest$GSI) #10
+length(p1.hatch.GSI.ttest$GSI) #36
+
 ```
 
 PINK Y2 GSI
@@ -145,6 +149,10 @@ summary(aov.p2.GSI_global)
 sd(GSI.for.ttest.wild$GSI.1)
 sd(GSI.for.ttest.hatch$GSI.1)
 
+#sample sizes
+length(GSI.for.ttest.hatch$GSI.1)
+length(GSI.for.ttest.wild$GSI.1)
+
 
 #05/25/22
 #LUBRIDATE
@@ -182,6 +190,10 @@ c.GSI.hatch.t.test <- c.GSI.clean %>% filter(Wild.or.Hatch=="hatchery")
 
 sd(c.GSI.wild.t.test$GSI)
 sd(c.GSI.hatch.t.test$GSI)
+
+#get the sample sizes for GSI
+length(c.GSI.wild.t.test$GSI) 
+length(c.GSI.hatch.t.test$GSI) 
 
 
 #try with no weird. a test t-test
@@ -289,7 +301,14 @@ p1.df.clean$fitted <- fitted(fit.p1.D)
 
 summary(fit.p1.D)
 
+#sample sizes
+unique(p1.df.clean$ID)
 
+p1_hatchcount_eggs <- p1.df.clean %>% filter(Otolith.results=="PORT ARMSTRONG")
+length(unique(p1_hatchcount_eggs$ID))
+
+p1_wildcount_eggs <- p1.df.clean %>% filter(Otolith.results=="no mark")
+length(unique(p1_wildcount_eggs$ID))
 
 ```
 
@@ -328,6 +347,7 @@ length(unique(p2.all.eggs$Label))
 
 order(unique(p2.all.eggs$Label))
 
+
 ##MERGE TIME
 p2.df <-  full_join(p2.all.eggs, GSI.data.4, by="Label")
 head(p2.df) 
@@ -342,6 +362,12 @@ p2.df.no.unknown <- p2.df.2 %>% filter(Oto.reading.4 != "none")
 #and remove weird (the green or spawned fish)
 p2.df.clean <- p2.df.no.unknown %>% filter(Weird == "n")
 #View(p2.df.clean)
+
+#sample sizes
+hatch_sample_size_p2egg <- p2.df.clean %>% filter(Oto.reading.4 == "PORT ARMSTRONG")
+hatch_ss_p2egg <- length(unique(hatch_sample_size_p2egg$ID)) #43
+wild_sample_size_p2egg <- p2.df.clean %>% filter(Oto.reading.4 == "No Mark")
+wild_ss_p2egg <- length(unique(wild_sample_size_p2egg$ID)) #34
 
 ##IN THE MIDDLE OF THIS NOW. TO FULLY INCLUDE DATE IN CONSIDERATION? I THINK YES....
 ##addition 05/24/22: test julian date
@@ -437,6 +463,8 @@ hatch_count_eggs <- coho.clean%>% filter(Wild.or.Hatch=="hatchery")
 wild_count_eggs <- coho.clean%>% filter(Wild.or.Hatch=="wild")
 length(unique(hatch_count_eggs$Fish.ID)) #22
 length(unique(wild_count_eggs$Fish.ID)) #18 (includes WF-25)
+
+
 
 #conceptual model (mixed model with interaction effects too)
 fit.c.A.INT <- lm(Diameter..mm. ~ Length..mm. + Wild.or.Hatch + Length..mm.:Wild.or.Hatch, data=coho.clean)
