@@ -3,7 +3,7 @@ title: "Morphcontinued"
 author: "Alex"
 date: "10/12/2021"
 output: html_document
-root.dir : "/Users/alexandrareich/Desktop/MORPHO IN ACTION/WORKDIR"
+root.dir : "/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science"
 ---
 
 
@@ -661,8 +661,10 @@ sd(w$Body.depth.mm.) #sd's, for my table
 sd(h$Body.depth.mm.)
  
 mean(w$Snout.length.mm.) #mean of w snout for p2
+length(w$Snout.length.mm.) #sample size
 
 mean(h$Snout.length.mm.)  #mean of hatch snout for p2
+length(h$Snout.length.mm.) #sample size
 
 sd(w$Snout.length.mm.)#standard deviations, for my table, for snout lenght
 sd(h$Snout.length.mm.)
@@ -813,6 +815,10 @@ sd(p2021_W$Length.mm.)
 
 #t-test of this
 t.test(p2021_H$Length.mm., p2021_W$Length.mm., alternative = "two.sided", var.equal = T)
+
+#sample sizes
+length(p2021_H$Length.mm.)
+length(p2021_W$Length.mm.)
 
 ```
 
