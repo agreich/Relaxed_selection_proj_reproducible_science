@@ -3,9 +3,10 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-let's load in and explore the data. What is our main data again?
+Load in and explore the data. 
 ```{r}
-Bomb_df <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Hatchery egg condition data 1-11-22_modified copy.csv")
+library(here)
+Bomb_df <- read.csv(here::here("DATA", "Hatchery egg condition data 1-11-22_modified copy.csv"))
 
 names(Bomb_df)
 library(tidyverse)
@@ -28,6 +29,7 @@ ggplot(Bomb_df) + aes(x=Wild_or_hatch, y=X..lipid) + geom_boxplot() +geom_jitter
 ```
 
 05/02/22 addtiion: t-tests!
+Not results below.
 ```{r}
 ?t.test
 library(dplyr)
@@ -66,15 +68,12 @@ Hatch_lipid_energy <- Bomb_df %>%
 (T_test_lipid <- t.test(Hatch_lipid_energy, Wild_lipid_energy, alternative="less", var.equal = T))
 
 
-#standard error
-T_test_ED$stderr
-T_test_lipid$stderr
-
-#sample sizes
+#standard error #NOT RESULTS
+(stderr_ED<-T_test_ED$stderr)
+(stderr_lipid<-T_test_lipid$stderr)
 
 
 
-#I should probably record these t-test values in the resutls section. My results section is a work in progress...
 ```
 
 
@@ -90,10 +89,10 @@ What is the indiviudal data called?
 Go back into "Cleaned up Analysis and Graphs.rnb and create a clean csv file with the GSI, and save that locally.
 ```{r}
 #GSI
-GSI_c <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/c_GSI_for_boms copy.csv")
+GSI_c <- read.csv(here::here("DATA", "c_GSI_for_boms copy.csv"))
 
 #GSI clean
-GSI_c_clean <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/BOMB_TIME/Data/c_GSI_clean_for_bomb.csv")
+GSI_c_clean <- read.csv(here::here("DATA", "c_GSI_clean_for_bomb copy.csv"))
 
 #eggs
 Eggs_c <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/c_all_eggs_bomb copy.csv")
