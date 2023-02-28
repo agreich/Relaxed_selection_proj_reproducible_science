@@ -6,11 +6,12 @@ output: html_notebook
 Load in and explore the data. 
 ```{r}
 library(here)
-Bomb_df <- read.csv(here::here("DATA", "Hatchery egg condition data 1-11-22_modified copy.csv"))
+Bomb_df <- read.csv(here::here("..","..","DATA", "Hatchery egg condition data 1-11-22_modified copy.csv"))
 
 names(Bomb_df)
 library(tidyverse)
 #View(Bomb_df)
+
 ```
 
 Plot exploratory stuff
@@ -28,7 +29,7 @@ ggplot(Bomb_df) + aes(x=Wild_or_hatch, y=X..lipid) + geom_boxplot() +geom_jitter
 
 ```
 
-05/02/22 addtiion: t-tests!
+05/02/22 addtiion: t-tests! DELETE B/C CONFUSING??
 Not results below.
 ```{r}
 ?t.test
@@ -87,22 +88,27 @@ Goal: attach bomb data to individual.
 What is the indiviudal data called?
 (see main R project folder)
 Go back into "Cleaned up Analysis and Graphs.rnb and create a clean csv file with the GSI, and save that locally.
+
+PROBLMEM HERE
 ```{r}
 #GSI
-GSI_c <- read.csv(here::here("DATA", "c_GSI_for_boms copy.csv"))
+GSI_c <- read.csv(here::here("..","..","DATA", "c_GSI_for_boms copy.csv"))
 
 #GSI clean
-GSI_c_clean <- read.csv(here::here("DATA", "c_GSI_clean_for_bomb copy.csv"))
+GSI_c_clean <- read.csv(here::here("..","..","DATA", "c_GSI_clean_for_bomb copy.csv"))
+
 
 #eggs
-Eggs_c <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/c_all_eggs_bomb copy.csv")
-C_other_data <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/c_all_other_stuff copy.csv")
+Eggs_c <- read.csv(here::here("..","..","DATA", "c_all_eggs_bomb copy.csv"))
+getwd()
+#C_other_data <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/c_all_other_stuff copy.csv")
+C_other_data <- read.csv(here::here("..","..","DATA", "c_all_other_stuff copy.csv"))
   
   
 #eggs clean
-Eggs_c_clean <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/c_GSI_clean_for_bomb copy.csv")
+Eggs_c_clean <- read.csv(here::here("..","..","DATA","c_GSI_clean_for_bomb copy.csv"))
 
-#another idea: add energy content as covariate in egg size analysis?? Uhhh...later. It's bomb time
+
 ```
 
 Combine data frames so your bomb dataframe has covariates
@@ -125,7 +131,7 @@ Bomb_with_covariates <- left_join(Bomb_df_relevant, GSI_c, by = "ID" )
 length(Bomb_df_relevant$InvestNo)
 length(Bomb_with_covariates$ID) #woohoo, it worked
 
-View(Bomb_with_covariates)
+#View(Bomb_with_covariates)
 
 
 ```
@@ -209,9 +215,16 @@ Hatch_egg_energy <- Bomb_df %>%
 ##HA: x has a lower mean than y
 ##assuming homogeneity (constant variance... Is this true tho?)
 
+names(T_test_ED)
+estimate_ED <- as.data.frame(T_test_ED$estimate)
+
+sd_ED_h <- sd(Hatch_egg_energy$BombED.Dry.)
+sd_ED_w <- sd(Wild_egg_energy$BombED.Dry.)
+
+
 #sample sizes
-length(Hatch_egg_energy$BombED.Dry.)
-length(Wild_egg_energy$BombED.Dry.)
+ss_hatch <- length(Hatch_egg_energy$BombED.Dry.)
+ss_wild <- length(Wild_egg_energy$BombED.Dry.)
 
 t.test(Hatch_egg_energy, Wild_egg_energy, alternative="less", var.equal = F) 
 ##HA: x has a lower mean than y
@@ -230,12 +243,34 @@ Hatch_lipid_energy <- Bomb_df %>%
 
 (T_test_lipid <- t.test(Hatch_lipid_energy, Wild_lipid_energy, alternative="less", var.equal = T))
 
+estimate_lipid <- as.data.frame(T_test_lipid$estimate)
+
 
 #standard error
-T_test_ED$stderr
-T_test_lipid$stderr
+sd_lipid_hatch <- sd(Hatch_lipid_energy$X..lipid)
+sd_lipid_wild <- sd(Wild_lipid_energy$X..lipid)
 
+#(stderr_ED <- T_test_ED$stderr)
+#(stderr_lipid <- T_test_lipid$stderr)
 
+#results
+NamesEnergy <- as.vector(c("Energy density mean hatch", "Energy density mean wild", "SD hatch", "SD wild", "Sample size hatch", "Sample size wild"))
+NamesLipids <- c("Lipid density mean hatch", "Lipid density mean wild", "SD hatch", "SD wild", "Sample size hatch", "Sample size wild" )
+ResultsEnergy <- c(estimate_ED[1,],estimate_ED[2,], sd_ED_h, sd_ED_w, ss_hatch, ss_wild)
+ResultsLipids <- c(estimate_lipid[1,],estimate_lipid[2,], sd_lipid_hatch, sd_lipid_wild, ss_hatch, ss_wild)
+
+energy_results_cohosub <- as_tibble(NamesEnergy)#, ResultsEnergy)
+energy_results_cohosub2 <- rbind(NamesEnergy,ResultsEnergy)
+
+lipid_results_cohosub <- as_tibble(NamesLipids)
+lipid_results_cohosub2 <- rbind(NamesLipids,ResultsLipids)
+
+Bomb_results_to_export <- cbind(energy_results_cohosub2, lipid_results_cohosub2)
+
+write.csv(Bomb_results_to_export, "Bomb_results_cohosub_auto.csv")
+#Yay, clean-ish results!
+
+        
 
 ```
 
