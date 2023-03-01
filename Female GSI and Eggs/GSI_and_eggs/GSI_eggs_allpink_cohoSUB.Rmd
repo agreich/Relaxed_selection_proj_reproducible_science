@@ -239,12 +239,12 @@ EGGS
 
 P1 Eggs
 ```{r}
-p1.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/P1.egg.diameters.csv")
+p1.all.eggs <- read.csv(here::here("..", "..", "DATA", "P1.egg.diameters.csv"))
 names(p1.all.eggs)
 head(p1.all.eggs)
 
 #the other pink even data
-p1.other.data<- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/FemalePinkGSIotodataadd1_without_gaps copy.csv")
+p1.other.data <- read.csv(here::here("..","..", "DATA", "FemalePinkGSIotodataadd1_without_gaps copy.csv"))
 p1.other.data$Fish.ID <- p1.other.data$ID
 
 #extract the oto result...or Join by the ID!!!!
@@ -320,7 +320,7 @@ length(unique(p1_wildcount_eggs$ID))
 P2 Eggs:
 ```{r}
 #load in them datas
-p2.GSI <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Female.p2.Rdata.3.csv")
+p2.GSI <- read.csv(here::here("..", "..", "DATA", "Female.p2.Rdata.3.csv"))
 names(p2.GSI)
 
 library(dplyr)
@@ -343,7 +343,7 @@ GSI.nogreen <- GSI.data.4 %>% filter(Weird == "n")
 
 
 #pink odd (p2)###########################
-p2.all.eggs <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Results.p2.ImageJ.eggs.csv")
+p2.all.eggs <- read.csv(here::here("..", "..", "DATA", "Results.p2.ImageJ.eggs.csv"))
 library(tidyverse)
 df.hold <- data.frame(unique(p2.all.eggs$Label))
 #I manually added in the photo ID's. They are under "Label" in both of the dataframes
@@ -447,9 +447,11 @@ summary(fit.p2.lme.noint)
 Coho Eggs
 ```{r}
 #prepping data. And get rid of them NA's!
-setwd("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA")
-c.all.eggs <- read.csv("coho.egg.diameters.csv")
-c.all.other.stuff <- read.csv("MASTERFemaleCohoQCwitheggs_copy.csv")
+#setwd("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA")
+#c.all.eggs <- read.csv("coho.egg.diameters.csv")
+#c.all.other.stuff <- read.csv("MASTERFemaleCohoQCwitheggs_copy.csv")
+c.all.eggs<-read.csv(here::here("..", "..", "DATA", "coho.egg.diameters.csv"))
+c.all.other.stuff <- read.csv(here::here("..", "..", "DATA", "MASTERFemaleCohoQCwitheggs_copy.csv"))
 
 names(c.all.eggs)
 names(c.all.other.stuff)
@@ -625,14 +627,19 @@ p2_results_GSI <- c(estimate_p2_ttest[1],estimate_p2_ttest[2], sd_p2_GSI_h, sd_p
 p2_results_GSI_tibble <- cbind(NamesGSI, p2_results_GSI)
 write.csv(p2_results_GSI_tibble, "Pink even-year GSI results.csv")
 ##
-estimate_coho_ttest <-  p2.GSI.t.test$estimate
-sd_coho_GSI_h <- sd(GSI.for.ttest.hatch$GSI.1)
-sd_coho_GSI_w <- sd(GSI.for.ttest.wild$GSI.1)
-ss_hatch_coho_GSI <- length(GSI.for.ttest.hatch$GSI.1)
-ss_wild_coho_GSI <- length(GSI.for.ttest.wild$GSI.1)
-t_GSI_coho <- p2.GSI.t.test$statistic
-p_GSI_coho <- p2.GSI.t.test$p.value
-df_GSI_coho <- p2.GSI.t.test$parameter
+estimate_coho_ttest <-  coho.GSI.t.test$estimate
+sd_coho_GSI_h <- sd(c.GSI.hatch.t.test$GSI)
+sd_coho_GSI_w <- sd(c.GSI.wild.t.test$GSI)
+ss_hatch_coho_GSI <- length(c.GSI.hatch.t.test$GSI)
+ss_wild_coho_GSI <- length(c.GSI.wild.t.test$GSI)
+t_GSI_coho <- coho.GSI.t.test$statistic
+p_GSI_coho <- coho.GSI.t.test$p.value
+df_GSI_coho <- coho.GSI.t.test$parameter
+
+coho_results_GSI <- c(estimate_coho_ttest[1],estimate_coho_ttest[2], sd_coho_GSI_h, sd_coho_GSI_w , ss_hatch_coho_GSI, ss_wild_coho_GSI, t_GSI_coho , p_GSI_coho, df_GSI_coho)
+
+coho_results_GSI_tibble <- cbind(NamesGSI, p2_results_GSI)
+write.csv(coho_results_GSI_tibble, "Coho GSI results.csv")
 
 
 #EGGS:
@@ -662,6 +669,22 @@ nlme::intervals(fit.p1.lme.param.noint)
 #library(coda)
 #model.pvals.p1 <- pvals.fnc(fit.p1.C1.REML, nsim=100, withMCMC=T)
 
+names_eggs_p1 <- c("Mean egg size hatch", "Mean egg size wild", "t egg", "p-val egg", "degrees of freedom", "Among fish SD", "Within fish SD") #"SD hatch egg", "SD wild egg",
+mean_egg_hatch_p1 <- 6.681267  #from fixef(fit.p1.lme.param.noint)
+mean_egg_wild_p1 <- 6.801640 #from fixef(fit.p1.lme.param.noint)
+t_p1_egg <- 1.424 #from summary(fit.p1.C1.REML)
+p_p1_egg <- 0.162/2 #from summary(fit.p1.C1.REML) and divided by 2 because 1-sided t test
+df_p1_egg <- 44 #from summary(fit.p1.C1.REML)
+among_fish_sd_pink <- 0.233099 #both this and below from: 
+within_fish_sd_pink <- 0.2839699 ##nlme::intervals(fit.p1.lme.param.yesint)
+
+results_p1 <- c(mean_egg_hatch_p1 , mean_egg_wild_p1, t_p1_egg , p_p1_egg, df_p1_egg, among_fish_sd_pink, within_fish_sd_pink)
+
+pink_results_egg<- cbind(names_eggs_p1, results_p1)
+write.csv(pink_results_egg, "Even year pink results eggs.csv")
+
+
+
 
 #p2
 summary(fit.p2.B4.reml)
@@ -688,16 +711,37 @@ nlme::intervals(fit.p2.lme.noint)
 ranef(fit.lme.no.int)
 fixef(fit.lme.no.int)
 summary(fit.lme.no.int)
-summary(fit.c.C1.REML)
+summary(fit.c.C1.REML) #t value from here!! and p-value
 summary(fit.lme)
 anova(fit.lme, test=T, type="marginal")
-anova(fit.c.C1.REML, test=T, type="marginal")
+(anova_coho_egg<-anova(fit.c.C1.REML, test=T, type="marginal"))
 ##length is sig here, isnt it. Don't I need to report estimates with length in the formula then...? 05/24/22
 #maybe...
 
-
 #t test: 0.000531/2 = 0.0002655 #IS THE OLD
 #t-test sub: 0.001044/2= 0.000522 #this is new t-test
+
+#automate csv output coho eggs
+names_eggs <- c("Mean egg size hatch", "Mean egg size wild",  "Sample size hatch", "Sample size wild", "t egg", "p-val egg", "degrees of freedom", "Among fish SD", "Within fish SD") #"SD hatch egg", "SD wild egg",
+sum_coho <- summary(fit.lme.no.int)
+#sd_hatch_egg <- 0.07369 
+#sd_wild_egg <- 0.10984
+temp_sd_w <- coho.clean %>% filter(Wild.or.Hatch=="wild")
+sd(temp_sd_w$Diameter..mm.)
+
+SS_coho_egg_h <- 22
+SS_coho_egg_w <- 18
+t_egg_coho <- 3.551 #taken from summary(fit.c.C1.REML)
+p_egg_coho <- 0.001044/2 # taken from summary(fit.c.C1.REML) and then divided by 2 because one-sided
+df_cohoegg<- 38 #also taken from summary(fit.c.C1.REML)
+among_fish_sd_coho <- 0.3430652  
+within_fish_sd_coho <- sum_coho$sigma #taken from the sum_coho output
+
+
+coho_egg_results <- c(fixef(fit.lme.no.int)[1],fixef(fit.lme.no.int)[2], SS_coho_egg_h, SS_coho_egg_w, t_egg_coho, p_egg_coho, df_cohoegg, among_fish_sd_coho, within_fish_sd_coho)
+
+coho_egg_results_df <- cbind(names_eggs, coho_egg_results)
+write.csv(coho_egg_results_df,"Coho egg results")
 
 ```
 
