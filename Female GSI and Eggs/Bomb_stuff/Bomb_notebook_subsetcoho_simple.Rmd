@@ -29,8 +29,7 @@ ggplot(Bomb_df) + aes(x=Wild_or_hatch, y=X..lipid) + geom_boxplot() +geom_jitter
 
 ```
 
-05/02/22 addtiion: t-tests! DELETE B/C CONFUSING??
-Not results below.
+BELOW CHUNK IS EXPLORATION, NOT RESULTS
 ```{r}
 ?t.test
 library(dplyr)
@@ -218,8 +217,13 @@ Hatch_egg_energy <- Bomb_df %>%
 names(T_test_ED)
 estimate_ED <- as.data.frame(T_test_ED$estimate)
 
+t_ED<- T_test_ED$statistic
+p_ED<- T_test_ED$p.value
+
 sd_ED_h <- sd(Hatch_egg_energy$BombED.Dry.)
 sd_ED_w <- sd(Wild_egg_energy$BombED.Dry.)
+
+
 
 
 #sample sizes
@@ -245,6 +249,9 @@ Hatch_lipid_energy <- Bomb_df %>%
 
 estimate_lipid <- as.data.frame(T_test_lipid$estimate)
 
+t_lipid <- T_test_lipid$statistic
+p_lipid <- T_test_lipid$p.value
+
 
 #standard error
 sd_lipid_hatch <- sd(Hatch_lipid_energy$X..lipid)
@@ -254,10 +261,10 @@ sd_lipid_wild <- sd(Wild_lipid_energy$X..lipid)
 #(stderr_lipid <- T_test_lipid$stderr)
 
 #results
-NamesEnergy <- as.vector(c("Energy density mean hatch", "Energy density mean wild", "SD hatch", "SD wild", "Sample size hatch", "Sample size wild"))
-NamesLipids <- c("Lipid density mean hatch", "Lipid density mean wild", "SD hatch", "SD wild", "Sample size hatch", "Sample size wild" )
-ResultsEnergy <- c(estimate_ED[1,],estimate_ED[2,], sd_ED_h, sd_ED_w, ss_hatch, ss_wild)
-ResultsLipids <- c(estimate_lipid[1,],estimate_lipid[2,], sd_lipid_hatch, sd_lipid_wild, ss_hatch, ss_wild)
+NamesEnergy <- as.vector(c("Energy density mean hatch", "Energy density mean wild", "SD hatch ED", "SD wild ED", "Sample size hatch", "Sample size wild", "t ED", "p-val ED"))
+NamesLipids <- c("Lipid density mean hatch", "Lipid density mean wild", "SD hatch lipid", "SD wild lipid", "Sample size hatch", "Sample size wild", "t lipid", "p-val lipid" )
+ResultsEnergy <- c(estimate_ED[1,],estimate_ED[2,], sd_ED_h, sd_ED_w, ss_hatch, ss_wild, t_ED, p_ED)
+ResultsLipids <- c(estimate_lipid[1,],estimate_lipid[2,], sd_lipid_hatch, sd_lipid_wild, ss_hatch, ss_wild, t_lipid, p_lipid)
 
 energy_results_cohosub <- as_tibble(NamesEnergy)#, ResultsEnergy)
 energy_results_cohosub2 <- rbind(NamesEnergy,ResultsEnergy)

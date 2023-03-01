@@ -23,6 +23,9 @@ GSI_eggs_allpink_coho_SUB.Rmd contains the pink 2020, pink 2021, and coho sub da
 
 
 Bomb calorimetry and lipid analysis:
+The "bomb_notebook_subsetcoho_simple.RMD" is the version with results, graphs, without misc exploration. Simpler.
+- also spits out a csv of results when run: "Bomb_results_cohosub_auto.csv"
+
 The "Bomb_notebook copy.Rmd" has the full female coho dataset
 The "Bomb_notebook_subsetcoho copy.Rmd" has the subsetted female dataset.
 -results reported in Table 4 are taken from line 268 for the energy results and line 287 for the lipid results, using one-sided Student's t tests.
@@ -32,5 +35,5 @@ The "Bomb_notebook_subsetcoho copy.Rmd" has the subsetted female dataset.
 We used the subsetted female dataset for our primary results.
 There's a few csv files associated with this one, mostly to add in covariates. In the future I will just use the raw csv files and do manipulation in R. 
 
-The "bomb_notebook_subsetcoho_simple.RMD" is the version with results, graphs, without misc exploration. Simpler.
+
 
