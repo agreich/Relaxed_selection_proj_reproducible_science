@@ -36,7 +36,10 @@ library(lmerTest)
 PINK YEAR 1: Females
 LOAD DATAS
 ```{r}
-p1 <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/FemalePinkGSIotodataadd1_without_gaps copy.csv")
+getwd()
+
+library(here)
+p1 <- read.csv(here::here("..","..","DATA","FemalePinkGSIotodataadd1_without_gaps copy.csv"))
 
 #prep GSI
 p1$GSI <- (p1$Total.Egg.Mass.g./p1$Fish.Weight..g.) *100
@@ -87,7 +90,8 @@ length(p1.hatch.GSI.ttest$GSI) #36
 
 PINK Y2 GSI
 ```{r}
-p2.GSI <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Female.p2.Rdata.3.csv")
+#p2.GSI <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Female.p2.Rdata.3.csv")
+p2.GSI <- read.csv(here::here("..","..","DATA", "Female.p2.Rdata.3.csv"))
 names(p2.GSI)
 
 p2.GSI <- p2.GSI %>%
@@ -139,7 +143,8 @@ bf.test(GSI.1 ~ Oto.reading, p2.GSI.clean.relevant) #says variance is equal
 #test for date significance
 #and maybe location significance
 write.csv(p2.GSI.clean, "p2.GSI.clean.csv") #made this a csv. Now goitn in to edit the date, new date column with early, middle , late in the run
-p2_GSI_clean_date_alt <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/p2.GSI.clean_altdate.csv")
+
+p2_GSI_clean_date_alt <- read.csv(here::here("..","..","DATA","p2.GSI.clean_altdate.csv")) 
 
 names(p2_GSI_clean_date_alt)
 aov.p2.GSI_global <- lm(GSI.1 ~ Oto.reading + Date_alt, p2_GSI_clean_date_alt)
@@ -171,7 +176,7 @@ summary(aov.p2.GSI_global) #not sig at ALLL. Date is not signficant.
 
 COHO year 1: GSI SUBSETTED
 ```{r}
-c.GSI.dat <-read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/MASTERFemaleCohoQCwitheggs_copy.csv")
+c.GSI.dat <- read.csv(here::here("..","..","DATA","MASTERFemaleCohoQCwitheggs_copy.csv"))
 c.GSI.dat$GSI <- (c.GSI.dat$Total.Egg.Mass.g./c.GSI.dat$Fish.Weight..g.)*100
 
 
@@ -588,6 +593,47 @@ coho.GSI.t.test
 p1.GSI.t.test$stderr
 p2.GSI.t.test$stderr
 coho.GSI.t.test$stderr
+##make a csv for the GSI results
+NamesGSI <- as.vector(c("GSI mean hatch", "GSI mean wild", "SD hatch GSI", "SD wild GSI", "Sample size hatch", "Sample size wild", "t GSI", "p-val GSI", "Degrees of freedom,"))
+estimate_p1_ttest <-  p1.GSI.t.test$estimate
+sd_p1_GSI_h <- sd(p1.hatch.GSI.ttest$GSI)
+sd_p1_GSI_w <- sd(p1.wild.GSI.ttest$GSI)
+ss_hatch_p1_GSI <- length(p1.hatch.GSI.ttest$GSI)
+ss_wild_p1_GSI <- length(p1.wild.GSI.ttest$GSI)
+t_GSI_p1 <- p1.GSI.t.test$statistic
+p_GSI_p1 <- p1.GSI.t.test$p.value
+df_GSI_p1 <- p1.GSI.t.test$parameter
+
+p1_results_GSI <- c(estimate_p1_ttest[1],estimate_p1_ttest[2], sd_p1_GSI_h, sd_p1_GSI_w , ss_hatch_p1_GSI, ss_wild_p1_GSI, t_GSI_p1 , p_GSI_p1, df_GSI_p1)
+
+tib_base <- as_tibble(NamesGSI)
+p1_results_GSI_tibble <- cbind(NamesGSI, p1_results_GSI)
+write.csv(p1_results_GSI_tibble, "Pink odd-year GSI results.csv")
+
+##
+estimate_p2_ttest <-  p2.GSI.t.test$estimate
+sd_p2_GSI_h <- sd(GSI.for.ttest.hatch$GSI.1)
+sd_p2_GSI_w <- sd(GSI.for.ttest.wild$GSI.1)
+ss_hatch_p2_GSI <- length(GSI.for.ttest.hatch$GSI.1)
+ss_wild_p2_GSI <- length(GSI.for.ttest.wild$GSI.1)
+t_GSI_p2 <- p2.GSI.t.test$statistic
+p_GSI_p2 <- p2.GSI.t.test$p.value
+df_GSI_p2 <- p2.GSI.t.test$parameter
+
+p2_results_GSI <- c(estimate_p2_ttest[1],estimate_p2_ttest[2], sd_p2_GSI_h, sd_p2_GSI_w , ss_hatch_p2_GSI, ss_wild_p2_GSI, t_GSI_p2 , p_GSI_p2, df_GSI_p2)
+
+p2_results_GSI_tibble <- cbind(NamesGSI, p2_results_GSI)
+write.csv(p2_results_GSI_tibble, "Pink even-year GSI results.csv")
+##
+estimate_coho_ttest <-  p2.GSI.t.test$estimate
+sd_coho_GSI_h <- sd(GSI.for.ttest.hatch$GSI.1)
+sd_coho_GSI_w <- sd(GSI.for.ttest.wild$GSI.1)
+ss_hatch_coho_GSI <- length(GSI.for.ttest.hatch$GSI.1)
+ss_wild_coho_GSI <- length(GSI.for.ttest.wild$GSI.1)
+t_GSI_coho <- p2.GSI.t.test$statistic
+p_GSI_coho <- p2.GSI.t.test$p.value
+df_GSI_coho <- p2.GSI.t.test$parameter
+
 
 #EGGS:
 

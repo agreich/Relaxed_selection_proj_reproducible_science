@@ -1,3 +1,17 @@
+IF YOU READ NOTHING ELSE, READ THIS:
+I learned how to code while conducing this project. The quality of code reflects this. It's not super clean, but it's definitely cleaner than it was, and honestly as clean as it is going to get now that I'm out of time to work on this project and moving on to other things.
+
+Main coho bomb results are in this pathway:  "Female GSI and Eggs/Bomb_stuff/Bomb_notebook_subsetcoho_simple.Rmd"
+--produces results csv and figure when run (for the coho subsetted dataset)
+
+The main GSI and egg results are in the pathway: 
+"Female GSI and Eggs/GSI_and_Eggs/GSI_eggs_allpink_cohoSUB.csv"
+--this will spit out csv's with pink and coho GSI and egg results (6 results csv's in total)
+
+
+
+
+
 # Relaxed_selection_proj_reproducible_science
 Cleaning up my master's project code so that other people can (more) easily understand what's going on here.
 
