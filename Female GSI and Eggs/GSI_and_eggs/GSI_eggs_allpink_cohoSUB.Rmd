@@ -706,6 +706,21 @@ nlme::intervals(fit.p2.lme.noint)
 #can calc sd from this, can make a funciton.
 ##is this right? I hope so. or just see your graphs. They'll have the confidence intervals too...
 
+names_eggs_p2 <- c("Mean egg size hatch", "Mean egg size wild", "t egg", "p-val egg", "degrees of freedom", "Among fish SD", "Within fish SD")
+mean_egg_p2_h <- 6.414625
+mean_egg_p2_w <- 6.194072 #based on fixef above
+t_egg_p2 <- 3.843 #based on summary(fit.p2.B4.reml)
+p_egg_p2 <- 1 #based on summary(fit.p2.B4.reml)
+df_p2 <- 75 #based on summary(fit.p2.B4.reml)
+among_fish_sd_p2 <- 0.2411312 #from output above
+within_fish_sd_p2 <- 0.1637388
+
+results_p2_egg <- c(mean_egg_p2_h, mean_egg_p2_w, t_egg_p2, p_egg_p2, df_p2, among_fish_sd_p2, within_fish_sd_p2)
+
+p2_egg_results <- cbind(names_eggs_p2,results_p2_egg )
+write.csv(p2_egg_results, "Odd year pink egg results.csv")
+
+
 
 #Coho parameter estimates
 ranef(fit.lme.no.int)
