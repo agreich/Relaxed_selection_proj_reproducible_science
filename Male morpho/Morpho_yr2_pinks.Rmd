@@ -543,7 +543,8 @@ fit.p_05$aov.table
 Where's my OG pink 2021 morpho data?
 THESIS TIME!/Field Data Year 2/FISH
 ```{r}
-p2.males <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Male.p2.Rdata.2.csv")
+#p2.males <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Male.p2.Rdata.2.csv")
+p2.males <- read.csv(here::here("DATA", "Male.p2.Rdata.2.csv"))
 ```
 
 
@@ -716,7 +717,9 @@ notresults4 <- t.test(h$Body.depth.mm., w$Body.depth.mm.)
 #View(p2_male_date_adj)
 
 #ok, fixed the date bullshit
-p2.males_dateadj<- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/p2.males2_dateadj.csv")
+#p2.males_dateadj<- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/p2.males2_dateadj.csv")
+p2.males_dateadj <- read.csv(here::here("DATA", "p2.males2_dateadj.csv"))
+
 
 #GRAPHS WITH DATE
 ggplot(p2.males_dateadj) + aes(x=Date_adj, y=Body.depth.mm.) + geom_boxplot() + geom_jitter(aes(color=Otolith.reading, shape=Location))

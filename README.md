@@ -8,6 +8,14 @@ The main GSI and egg results are in the pathway:
 "Female GSI and Eggs/GSI_and_Eggs/GSI_eggs_allpink_cohoSUB.csv"
 --this will spit out csv's with pink and coho GSI and egg results (6 results csv's in total)
 
+The main morpho resutls, within the Male morpho folder:
+"Morpho_yr1_pinkcoho.RMD" - pink and coho yr 1 results
+"Morpho_yr2_pinks.RMD" - pink yr 2 results
+"Simply graphing.R" - final graphs for these
+--None of these spit out convenient results csv's yet, but they are relatively well organized code
+
+
+
 
 
 

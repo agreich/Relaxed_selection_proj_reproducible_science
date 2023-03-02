@@ -76,7 +76,11 @@ What about sliding semi-landmarks? ADDED THIS IN THIS VERSION
 
 Now transform into Procrustes shape space
 ```{r}
-pinkcurves <- as.matrix(read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/curveslide.csv", header=T))
+#pinkcurves <- as.matrix(read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/curveslide.csv", header=T))
+getwd()
+library(here)
+pinkcurves <- as.matrix(read.csv(here::here("DATA", "curveslide.csv"), header=T))
+
 gpa.no56 <- gpagen(pinkdat.landsno56, curves = pinkcurves)
 plot(gpa.no56)
 
@@ -232,6 +236,18 @@ summary(fit.p.int)  #NOT SIGNIFICANT, and interaction effects are not significan
 #log of csize is significant, but not origin categorical variabble
 #A MANCOVA
 
+F_origin_p1 <- 1.6659 #from fit.p 
+F_centroidsize_p1 <- 12.4231 #log of centroid size F
+p_val_origin <- 0.1108
+p_val_centroid_size <- 1e-04
+
+names_p1_geomorph <- c("F origin", "F log centroid size", "P value origin", "P value centroid size")
+results_p1_geomorph <- c(F_origin_p1,F_centroidsize_p1, p_val_origin, p_val_centroid_size)
+
+p1_geomorph <- cbind(names_p1_geomorph, results_p1_geomorph)
+
+write.csv(p1_geomorph, "Even-year pink geomorph results.csv")
+
 ```
 
 
@@ -307,7 +323,8 @@ COHO TIME
 
 ```{r}
 #load in coho data
-coho_lands <- readland.tps("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Coho091021_rand_fixed062221.tps", readcurves=TRUE)
+#coho_lands <- readland.tps("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/Coho091021_rand_fixed062221.tps", readcurves=TRUE)
+coho_lands <- readland.tps(here::here("DATA", "Coho091021_rand_fixed062221.tps"), readcurves=TRUE)
 
 coho_lands<-coho_lands[c(-5,-6),,]
 #the photo names should tell you the ID, probably need to go make a vector of the coho ID's tho
@@ -320,7 +337,8 @@ the_order <- c(45,43,41, 49, 3, 16, 44, 13, 54, 47, 17, 55, 18, 21, 34, 57, 39, 
 #WHAT IS length_c....
 #######3
 #Coho length/depth stuff
-coho.dat <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/MASTERMaleCohoQC copy.csv")
+#coho.dat <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/MASTERMaleCohoQC copy.csv")
+coho.dat <- read.csv(here::here("DATA", "MASTERMaleCohoQC copy.csv"))
 names(coho.dat)
 length_c <- coho.dat$Length..mm.
 
@@ -627,7 +645,8 @@ How I created the sliders, originally:
 
 Post-siders coho long analysis
 ```{r}
-curves.coho_long <- as.matrix(read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Morpho_Code_040522/curveslide_cl.csv", header=T))
+#curves.coho_long <- as.matrix(read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Morpho_Code_040522/curveslide_cl.csv", header=T))
+curves.coho_long <- as.matrix(read.csv(here::here("DATA", "curveslide.csv"), header=T))
 #that worked
 gpa_coho_long_slide <- gpagen(coho_lands_long, curves=curves.coho_long)
 #this uses bending energy to move the semilandmarks
@@ -1056,7 +1075,8 @@ length(wild_S.p$depth)
 Length pinks: 
 ```{r}
 #get the lengths for pink
-p.dat <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/MASTERMalePinksQC.reorder.csv")
+#p.dat <- read.csv("/Users/alexandrareich/Desktop/THESIS TIME!/Compilation of GITHUB project code/Relaxed_selection_proj_reproducible_science/DATA/MASTERMalePinksQC.reorder.csv")
+p.dat <- read.csv(here::here("DATA", "MASTERMalePinksQC.reorder.csv"))
 #names(p.dat)
 length_p <- p.dat$Length..mm.
 
